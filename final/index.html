@@ -1,0 +1,1797 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.8.25">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Alona Nazarenko, Tetiana Mazko, Tymofii Muraviov">
+<meta name="dcterms.date" content="2025-10-21">
+
+<title>Geospatial Analysis of NYC Crime</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="p1_files/libs/clipboard/clipboard.min.js"></script>
+<script src="p1_files/libs/quarto-html/quarto.js" type="module"></script>
+<script src="p1_files/libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="p1_files/libs/quarto-html/axe/axe-check.js" type="module"></script>
+<script src="p1_files/libs/quarto-html/popper.min.js"></script>
+<script src="p1_files/libs/quarto-html/tippy.umd.min.js"></script>
+<script src="p1_files/libs/quarto-html/anchor.min.js"></script>
+<link href="p1_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="p1_files/libs/quarto-html/quarto-syntax-highlighting-7b89279ff1a6dce999919e0e67d4d9ec.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="p1_files/libs/bootstrap/bootstrap.min.js"></script>
+<link href="p1_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="p1_files/libs/bootstrap/bootstrap-a74871fe4945b66d259aafc266475145.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+
+
+</head>
+
+<body class="quarto-light">
+
+<div id="quarto-content" class="page-columns page-rows-contents page-layout-article">
+<div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+  <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#introduction" id="toc-introduction" class="nav-link active" data-scroll-target="#introduction">Introduction</a></li>
+  <li><a href="#setup" id="toc-setup" class="nav-link" data-scroll-target="#setup">Setup</a></li>
+  <li><a href="#data-import" id="toc-data-import" class="nav-link" data-scroll-target="#data-import">Data import</a>
+  <ul class="collapse">
+  <li><a href="#pre-processing" id="toc-pre-processing" class="nav-link" data-scroll-target="#pre-processing">Pre-processing</a></li>
+  <li><a href="#geospatial-data" id="toc-geospatial-data" class="nav-link" data-scroll-target="#geospatial-data">Geospatial data</a></li>
+  </ul></li>
+  <li><a href="#visualiazations-and-insights" id="toc-visualiazations-and-insights" class="nav-link" data-scroll-target="#visualiazations-and-insights">Visualiazations and Insights</a>
+  <ul class="collapse">
+  <li><a href="#the-when-and-who-of-nyc-crime" id="toc-the-when-and-who-of-nyc-crime" class="nav-link" data-scroll-target="#the-when-and-who-of-nyc-crime">The “When” and “Who” of NYC Crime</a></li>
+  <li><a href="#gender" id="toc-gender" class="nav-link" data-scroll-target="#gender">Gender</a></li>
+  <li><a href="#race" id="toc-race" class="nav-link" data-scroll-target="#race">Race</a></li>
+  <li><a href="#age" id="toc-age" class="nav-link" data-scroll-target="#age">Age</a></li>
+  <li><a href="#the-where-a-geospatial-analysis" id="toc-the-where-a-geospatial-analysis" class="nav-link" data-scroll-target="#the-where-a-geospatial-analysis">The “Where” — A Geospatial Analysis</a></li>
+  </ul></li>
+  </ul>
+</nav>
+</div>
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Geospatial Analysis of NYC Crime</h1>
+</div>
+
+
+<div class="quarto-title-meta-author">
+  <div class="quarto-title-meta-heading">Author</div>
+  <div class="quarto-title-meta-heading">Affiliation</div>
+  
+    <div class="quarto-title-meta-contents">
+    <p class="author">Alona Nazarenko, Tetiana Mazko, Tymofii Muraviov </p>
+  </div>
+  <div class="quarto-title-meta-contents">
+        <p class="affiliation">
+            Kyiv School of Economics
+          </p>
+      </div>
+  </div>
+
+<div class="quarto-title-meta">
+
+      
+    <div>
+    <div class="quarto-title-meta-heading">Published</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">October 21, 2025</p>
+    </div>
+  </div>
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="introduction" class="level2">
+<h2 class="anchored" data-anchor-id="introduction">Introduction</h2>
+<p><strong>Role devision:</strong></p>
+<ul>
+<li>Tanya Mazko - pre-proccesing the data, data-manipulation, creating <code>reg-expresions</code>.</li>
+<li>Alona Nazarenko - data visualization.</li>
+<li>Tymofii Muraviov - final <code>quarto</code> file and <code>canva</code> presentation.</li>
+</ul>
+<p>During this project we explored geospatial analysis using <code>R</code> as main language with it’s powerfull libraries to help in optimal solution. We are gonna investigate NYC arrests’, shootings’ data to find potential patterns as well as crime hotspots and proove or refute some hypothesis.</p>
+<p>The data from NYC Open Data will be pre-proccesed from <code>.csv</code> to <code>.parquet</code> for optimized workflow.</p>
+<p><strong>Our main questions are:</strong></p>
+<ol type="1">
+<li>What are the top 100 crime hotspots in NYC, and what are the dominant crime types at these locations?</li>
+<li>Is there a spatial relationship between the locations of weapon-related arrests and the locations of reported shooting incidents?</li>
+<li>Is there a clear demografic profile of person who is more likely to do illegal stuff and if yes how does it look?</li>
+</ol>
+</section>
+<section id="setup" class="level2">
+<h2 class="anchored" data-anchor-id="setup">Setup</h2>
+<p>First, I’ll load all the necessary packages for this analysis. Using <code>pacman</code> helps manage loading and, if necessary, installing all packages at once. This includes <code>tidyverse</code> for general manipulation, <code>arrow</code> for reading Parquet files, and the <code>sf</code>, <code>tigris</code>, and <code>osmdata</code> stack for geospatial work.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> (<span class="sc">!</span><span class="fu">require</span>(pacman)) <span class="fu">install.packages</span>(<span class="st">"pacman"</span>)</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Load all required packages for the entire project</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>pacman<span class="sc">::</span><span class="fu">p_load</span>(</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>  tidyverse, rvest, janitor, ggrepel, jsonlite, httr2,</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>  treemapify, plotly, viridis, lubridate, tigris, sf,</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>  gganimate, osmdata, arrow, duckdb, DBI, here, knitr, skimr,</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>  ggplot2, dplyr, knitr, scales</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</section>
+<section id="data-import" class="level2">
+<h2 class="anchored" data-anchor-id="data-import">Data import</h2>
+<p>We downloaded <code>.csv</code> files from NYC OpenData:</p>
+<ol type="1">
+<li><a href="https://data.cityofnewyork.us/Public-Safety/NYPD-Arrest-Data-Year-to-Date-/uip8-fykc/about_data">NYPD arrest data</a> as it is: up to date(July 15, 2025), <strong>143K rows</strong>(interesting), has latitude and longitude info(data-viz will be accurate).</li>
+<li><a href="https://data.cityofnewyork.us/Public-Safety/NYPD-Shooting-Incident-Data-Year-To-Date-/5ucz-vwe8/about_data">NYPD shooting incident data</a> as it is: same as previous data-set but looks from a different perspective so we can do interesting conclusions.</li>
+<li><a href="https://data.cityofnewyork.us/Business/Issued-Licenses/w7w3-xahh/about_data">Issued licenses</a> as it: has latitude and longitude info + we can try to find connections between the category the building is assigned to and the likelihood of arrests/shootings happening there.</li>
+</ol>
+<section id="pre-processing" class="level3">
+<h3 class="anchored" data-anchor-id="pre-processing">Pre-processing</h3>
+<p>Overview of steps:</p>
+<ol type="1">
+<li>Connection to <code>duckdb</code>.</li>
+<li>Reading data from our <code>.csv</code> files.</li>
+<li>Saving the data to <code>.parquet</code> files.</li>
+<li>Disconnecting from <code>duckdb</code>.</li>
+</ol>
+<div class="cell">
+<details class="code-fold">
+<summary>Show code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>con <span class="ot">&lt;-</span> <span class="fu">dbConnect</span>(duckdb<span class="sc">::</span><span class="fu">duckdb</span>())</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="co">#------arrests data to parquet</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="fu">dbExecute</span>(con, <span class="st">"</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="st">    CREATE TABLE arrests AS</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="st">    SELECT * FROM read_csv_auto('data/arrest_data.csv');</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="st">"</span>)</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="fu">dbExecute</span>(con, <span class="st">"</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a><span class="st">    COPY arrests TO 'data/arrest_data.parquet' (FORMAT 'parquet');</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a><span class="st">"</span>)</span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a><span class="co">#------licenses data to parquet</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a><span class="fu">dbExecute</span>(con, <span class="st">"</span></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a><span class="st">    CREATE TABLE licenses AS</span></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a><span class="st">    SELECT * FROM read_csv_auto(</span></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a><span class="st">        'data/licenses.csv',</span></span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a><span class="st">        delim = ',',</span></span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a><span class="st">        header = true,</span></span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a><span class="st">        quote = '</span><span class="sc">\"</span><span class="st">',</span></span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a><span class="st">        ignore_errors = true,</span></span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a><span class="st">        all_varchar = true</span></span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a><span class="st">    );</span></span>
+<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a><span class="st">"</span>)</span>
+<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a><span class="fu">dbExecute</span>(con, <span class="st">"</span></span>
+<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a><span class="st">    COPY licenses TO 'data/licenses.parquet' (FORMAT 'parquet');</span></span>
+<span id="cb2-27"><a href="#cb2-27" aria-hidden="true" tabindex="-1"></a><span class="st">"</span>)</span>
+<span id="cb2-28"><a href="#cb2-28" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-29"><a href="#cb2-29" aria-hidden="true" tabindex="-1"></a><span class="co">#------shooting data to parquet</span></span>
+<span id="cb2-30"><a href="#cb2-30" aria-hidden="true" tabindex="-1"></a><span class="fu">dbExecute</span>(con, <span class="st">"</span></span>
+<span id="cb2-31"><a href="#cb2-31" aria-hidden="true" tabindex="-1"></a><span class="st">    CREATE TABLE shooting AS</span></span>
+<span id="cb2-32"><a href="#cb2-32" aria-hidden="true" tabindex="-1"></a><span class="st">    SELECT * FROM read_csv_auto('data/shooting.csv');</span></span>
+<span id="cb2-33"><a href="#cb2-33" aria-hidden="true" tabindex="-1"></a><span class="st">"</span>)</span>
+<span id="cb2-34"><a href="#cb2-34" aria-hidden="true" tabindex="-1"></a><span class="fu">dbExecute</span>(con, <span class="st">"</span></span>
+<span id="cb2-35"><a href="#cb2-35" aria-hidden="true" tabindex="-1"></a><span class="st">    COPY shooting TO 'data/shooting.parquet' (FORMAT 'parquet');</span></span>
+<span id="cb2-36"><a href="#cb2-36" aria-hidden="true" tabindex="-1"></a><span class="st">"</span>)</span>
+<span id="cb2-37"><a href="#cb2-37" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-38"><a href="#cb2-38" aria-hidden="true" tabindex="-1"></a><span class="co"># Disconnect from DuckDB</span></span>
+<span id="cb2-39"><a href="#cb2-39" aria-hidden="true" tabindex="-1"></a><span class="fu">dbDisconnect</span>(con, <span class="at">shutdown =</span> <span class="cn">TRUE</span>) </span>
+<span id="cb2-40"><a href="#cb2-40" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-41"><a href="#cb2-41" aria-hidden="true" tabindex="-1"></a><span class="co">#------------------------------------------------------------</span></span>
+<span id="cb2-42"><a href="#cb2-42" aria-hidden="true" tabindex="-1"></a><span class="co"># Read the created parquet files into R objects</span></span>
+<span id="cb2-43"><a href="#cb2-43" aria-hidden="true" tabindex="-1"></a>arrests <span class="ot">&lt;-</span> arrow<span class="sc">::</span><span class="fu">read_parquet</span>(<span class="st">"data/arrest_data.parquet"</span>) <span class="sc">|&gt;</span> </span>
+<span id="cb2-44"><a href="#cb2-44" aria-hidden="true" tabindex="-1"></a>  <span class="fu">clean_names</span>()</span>
+<span id="cb2-45"><a href="#cb2-45" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-46"><a href="#cb2-46" aria-hidden="true" tabindex="-1"></a>licenses <span class="ot">&lt;-</span> arrow<span class="sc">::</span><span class="fu">read_parquet</span>(<span class="st">"data/licenses.parquet"</span>) <span class="sc">|&gt;</span></span>
+<span id="cb2-47"><a href="#cb2-47" aria-hidden="true" tabindex="-1"></a>  <span class="fu">clean_names</span>()</span>
+<span id="cb2-48"><a href="#cb2-48" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-49"><a href="#cb2-49" aria-hidden="true" tabindex="-1"></a><span class="co"># You'll probably want to load the shooting data too:</span></span>
+<span id="cb2-50"><a href="#cb2-50" aria-hidden="true" tabindex="-1"></a>shooting <span class="ot">&lt;-</span> arrow<span class="sc">::</span><span class="fu">read_parquet</span>(<span class="st">"data/shooting.parquet"</span>) <span class="sc">|&gt;</span></span>
+<span id="cb2-51"><a href="#cb2-51" aria-hidden="true" tabindex="-1"></a>  <span class="fu">clean_names</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</div>
+<p>Creation of the reg-expresions with 2 intentions:</p>
+<ol type="1">
+<li>To devide <code>crimes</code> into categories.</li>
+<li>To devide <code>buildings</code> into categories.</li>
+</ol>
+<div class="cell">
+<details class="code-fold">
+<summary>Show code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>crime_category <span class="ot">&lt;-</span> <span class="cf">function</span>(crime) {</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">case_when</span>(</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">str_detect</span>(crime, <span class="fu">regex</span>(<span class="st">"ASSAULT|ROBBERY|HOMICIDE|RAPE|SEXUAL|KIDNAPPING|ENDANGERMENT|MENACING|STRANGULATION|OBSTR BREATH/CIRCUL|AGGRAVATED HARASSMENT|MAKING TERRORISTIC THREAT|FORCIBLE TOUCHING|MURDER|COERCION|SODOMY|STALKING"</span>, <span class="at">ignore_case=</span><span class="cn">TRUE</span>)) <span class="sc">~</span> <span class="st">"Violent Crime"</span>,</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">str_detect</span>(crime, <span class="fu">regex</span>(<span class="st">"BURGLARY|LARCENY|THEFT|FORGERY|FRAUD|ARSON|MISCHIEF|GRAFFITI|STOLEN PROPERTY|UNAUTHORIZED USE VEHICLE|BURGLARS TOOLS"</span>, <span class="at">ignore_case=</span><span class="cn">TRUE</span>)) <span class="sc">~</span> <span class="st">"Property Crime"</span>,</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">str_detect</span>(crime, <span class="fu">regex</span>(<span class="st">"CONTROLLED|DRUG|CANNABIS|ALCOHOL|IMPAIRED|MARIJUANA|POSS METH|SYNTHETIC"</span>, <span class="at">ignore_case=</span><span class="cn">TRUE</span>)) <span class="sc">~</span> <span class="st">"Drug/Alcohol"</span>,</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>    <span class="fu">str_detect</span>(crime, <span class="fu">regex</span>(<span class="st">"WEAPON|FIREWORKS|EXPLOSIVE|CRIM POS WEAP|FIREARMS"</span>, <span class="at">ignore_case=</span><span class="cn">TRUE</span>)) <span class="sc">~</span> <span class="st">"Weapons/Explosives"</span>,</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>    <span class="fu">str_detect</span>(crime, <span class="fu">regex</span>(<span class="st">"TRESPASS|DISORDERLY|LOITERING|TRAFFIC|BRIBERY|PUBLIC|CODE|HEALTH|BAIL JUMPING|ESCAPE|IMPRISONMENT|CONTEMPT|NUISANCE|OBSCENITY|FUGITIVE|UNLICENSED OPERATOR|RADIO DEVICES|APPEARANCE TICKET|GENERAL BUSINESS LAW|NY STATE LAWS|NYS|NYC UNCLASSIFIED"</span>, <span class="at">ignore_case=</span><span class="cn">TRUE</span>)) <span class="sc">~</span> <span class="st">"Public Order/Admin"</span>,</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>    <span class="fu">str_detect</span>(crime, <span class="fu">regex</span>(<span class="st">"PROSTITUTION|PATRONIZING|PROMOTING|LICENSED PREMISES|COMPULSORY|SEX CRIMES|INCEST|LURING A CHILD"</span>, <span class="at">ignore_case=</span><span class="cn">TRUE</span>)) <span class="sc">~</span> <span class="st">"Sex Crimes"</span>,</span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>    <span class="fu">str_detect</span>(crime, <span class="fu">regex</span>(<span class="st">"ANIMAL|TORTURE/INJURE|NEGLECT/POISON|CONFINING ANIMAL|CAUSE SPI/KILL|ABANDON ANIMAL"</span>, <span class="at">ignore_case=</span><span class="cn">TRUE</span>)) <span class="sc">~</span> <span class="st">"Animal Crimes"</span>,</span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>    <span class="fu">str_detect</span>(crime, <span class="fu">regex</span>(<span class="st">"RECKLESS DRIVING|SPEEDING|FAIL TO SIGNAL|SEAT BELTS|IMPROPER LIGHTS|ONE WAY STREET"</span>, <span class="at">ignore_case=</span><span class="cn">TRUE</span>)) <span class="sc">~</span> <span class="st">"Traffic"</span>,</span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>    <span class="fu">str_detect</span>(crime, <span class="fu">regex</span>(<span class="st">"MONEY LAUNDERING|SALE|SALES OF PRESCRIPTION|UNAUTH. SALE"</span>, <span class="at">ignore_case=</span><span class="cn">TRUE</span>)) <span class="sc">~</span> <span class="st">"Financial/White Collar"</span>,</span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>    <span class="cn">TRUE</span> <span class="sc">~</span> <span class="st">"Other"</span></span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>regex_drink <span class="ot">&lt;-</span> <span class="st">"</span><span class="sc">\\</span><span class="st">b(pub|bar|tavern|liquor|brewery|alcohol)</span><span class="sc">\\</span><span class="st">b"</span></span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a>regex_leisure <span class="ot">&lt;-</span> <span class="st">"</span><span class="sc">\\</span><span class="st">b(spa|salon|massage|cinema|theater|club|recreation)</span><span class="sc">\\</span><span class="st">b"</span></span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a>regex_family <span class="ot">&lt;-</span> <span class="st">"</span><span class="sc">\\</span><span class="st">b(family|child|children|kids|home|parent|baby)</span><span class="sc">\\</span><span class="st">b"</span></span>
+<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a>regex_edu_work <span class="ot">&lt;-</span> <span class="st">"</span><span class="sc">\\</span><span class="st">b(school|college|university|academy|training|business|office)</span><span class="sc">\\</span><span class="st">b"</span></span>
+<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a>excluded_leisure <span class="ot">&lt;-</span> <span class="st">"Car Wash|Electronics Store|Secondhand Dealer|Home Improvement Contractor|Pawnbroker|Debt Collection Agency|Tobacco Retail Dealer"</span></span>
+<span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a>excluded_drink_regex <span class="ot">&lt;-</span> <span class="st">"Locksmith|Contractor|Tow|Secondhand|Car Wash|Garage|Hotel|Employment|Electronics|Guide|Vendor|Pawnbroker|Bingo|Delivery|Storage|Laundry|Games|Cab"</span></span>
+<span id="cb3-23"><a href="#cb3-23" aria-hidden="true" tabindex="-1"></a>excluded_edu_work <span class="ot">&lt;-</span> <span class="st">"Garage|Parking|Tobacco|Stoop|Secondhand|Electronic|Dealer"</span></span>
+<span id="cb3-24"><a href="#cb3-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-25"><a href="#cb3-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-26"><a href="#cb3-26" aria-hidden="true" tabindex="-1"></a>licenses_cleaned <span class="ot">&lt;-</span> licenses <span class="sc">|&gt;</span></span>
+<span id="cb3-27"><a href="#cb3-27" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb3-28"><a href="#cb3-28" aria-hidden="true" tabindex="-1"></a>    <span class="at">text_search =</span> <span class="fu">paste</span>(business_name, business_category, dba_trade_name, <span class="at">sep =</span> <span class="st">" "</span>),</span>
+<span id="cb3-29"><a href="#cb3-29" aria-hidden="true" tabindex="-1"></a>    <span class="at">category =</span> <span class="fu">case_when</span>(</span>
+<span id="cb3-30"><a href="#cb3-30" aria-hidden="true" tabindex="-1"></a>      <span class="fu">str_detect</span>(text_search, <span class="fu">regex</span>(regex_drink, <span class="at">ignore_case =</span> <span class="cn">TRUE</span>)) <span class="sc">&amp;</span></span>
+<span id="cb3-31"><a href="#cb3-31" aria-hidden="true" tabindex="-1"></a>        <span class="sc">!</span><span class="fu">str_detect</span>(business_category, <span class="fu">regex</span>(excluded_drink_regex, <span class="at">ignore_case =</span> <span class="cn">TRUE</span>)) <span class="sc">~</span> <span class="st">"Drink"</span>,</span>
+<span id="cb3-32"><a href="#cb3-32" aria-hidden="true" tabindex="-1"></a>      <span class="fu">str_detect</span>(text_search, <span class="fu">regex</span>(regex_leisure, <span class="at">ignore_case =</span> <span class="cn">TRUE</span>)) <span class="sc">&amp;</span></span>
+<span id="cb3-33"><a href="#cb3-33" aria-hidden="true" tabindex="-1"></a>        <span class="sc">!</span><span class="fu">str_detect</span>(business_category, <span class="fu">regex</span>(excluded_leisure, <span class="at">ignore_case =</span> <span class="cn">TRUE</span>)) <span class="sc">~</span> <span class="st">"Leisure"</span>,</span>
+<span id="cb3-34"><a href="#cb3-34" aria-hidden="true" tabindex="-1"></a>      <span class="fu">str_detect</span>(text_search, <span class="fu">regex</span>(regex_family, <span class="at">ignore_case =</span> <span class="cn">TRUE</span>)) <span class="sc">~</span> <span class="st">"Family"</span>,</span>
+<span id="cb3-35"><a href="#cb3-35" aria-hidden="true" tabindex="-1"></a>      <span class="fu">str_detect</span>(text_search, <span class="fu">regex</span>(regex_edu_work, <span class="at">ignore_case =</span> <span class="cn">TRUE</span>))<span class="sc">&amp;</span></span>
+<span id="cb3-36"><a href="#cb3-36" aria-hidden="true" tabindex="-1"></a>        <span class="sc">!</span><span class="fu">str_detect</span>(business_category, <span class="fu">regex</span>(excluded_edu_work, <span class="at">ignore_case =</span> <span class="cn">TRUE</span>)) <span class="sc">~</span> <span class="st">"Education/Work"</span>,</span>
+<span id="cb3-37"><a href="#cb3-37" aria-hidden="true" tabindex="-1"></a>      <span class="cn">TRUE</span> <span class="sc">~</span> <span class="st">"Other"</span></span>
+<span id="cb3-38"><a href="#cb3-38" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb3-39"><a href="#cb3-39" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb3-40"><a href="#cb3-40" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-41"><a href="#cb3-41" aria-hidden="true" tabindex="-1"></a><span class="fu">table</span>(licenses_cleaned<span class="sc">$</span>category)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</div>
+<p><strong>Sumup of the categories we have:</strong></p>
+<div class="cell">
+<details class="code-fold">
+<summary>Show code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>arrests_summary <span class="ot">&lt;-</span> arrests <span class="sc">|&gt;</span> </span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">category =</span> <span class="fu">crime_category</span>(pd_desc)) <span class="sc">|&gt;</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(category) <span class="sc">|&gt;</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="at">count =</span> <span class="fu">n</span>()) <span class="sc">|&gt;</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(<span class="fu">desc</span>(count)) <span class="co"># Sorts the table</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Print the arrests table</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a><span class="fu">kable</span>(arrests_summary, </span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>      <span class="at">caption =</span> <span class="st">"Summary of Arrests by Crime Category"</span>,</span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>      <span class="at">col.names =</span> <span class="fu">c</span>(<span class="st">"Crime Category"</span>, <span class="st">"Total Count"</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<caption>Summary of Arrests by Crime Category</caption>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Crime Category</th>
+<th style="text-align: right;">Total Count</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Property Crime</td>
+<td style="text-align: right;">43515</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Violent Crime</td>
+<td style="text-align: right;">42757</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Public Order/Admin</td>
+<td style="text-align: right;">28591</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Drug/Alcohol</td>
+<td style="text-align: right;">13898</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Other</td>
+<td style="text-align: right;">8296</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Weapons/Explosives</td>
+<td style="text-align: right;">5360</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Sex Crimes</td>
+<td style="text-align: right;">621</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Financial/White Collar</td>
+<td style="text-align: right;">261</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Traffic</td>
+<td style="text-align: right;">112</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Animal Crimes</td>
+<td style="text-align: right;">83</td>
+</tr>
+</tbody>
+</table>
+</div>
+<details class="code-fold">
+<summary>Show code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>licenses_summary <span class="ot">&lt;-</span> licenses_cleaned <span class="sc">|&gt;</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(category) <span class="sc">|&gt;</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="at">count =</span> <span class="fu">n</span>()) <span class="sc">|&gt;</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(<span class="fu">desc</span>(count)) <span class="co"># Sorts the table</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Print the licenses table</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a><span class="fu">kable</span>(licenses_summary,</span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>      <span class="at">caption =</span> <span class="st">"Summary of Licenses by Category"</span>,</span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>      <span class="at">col.names =</span> <span class="fu">c</span>(<span class="st">"License Category"</span>, <span class="st">"Total Count"</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<caption>Summary of Licenses by Category</caption>
+<thead>
+<tr class="header">
+<th style="text-align: left;">License Category</th>
+<th style="text-align: right;">Total Count</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Other</td>
+<td style="text-align: right;">46420</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Family</td>
+<td style="text-align: right;">19761</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Education/Work</td>
+<td style="text-align: right;">435</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Leisure</td>
+<td style="text-align: right;">28</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Drink</td>
+<td style="text-align: right;">25</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</section>
+<section id="geospatial-data" class="level3">
+<h3 class="anchored" data-anchor-id="geospatial-data">Geospatial data</h3>
+<p>Description of operations:</p>
+<ol type="1">
+<li>The shape of 5 polygons, which together create NYC, has been fetched.</li>
+<li>Bounding-box was created.</li>
+<li>Downloaded the info for major streets.</li>
+<li>Cleaned and combined the data.</li>
+<li>The data was saved to .rds files and flag <code>cache</code> has been set to <code>: true</code>. We did this to <strong>optimise render of quarto</strong> file - <strong>not to wait</strong> for the download each time.</li>
+</ol>
+<div class="cell">
+<details class="code-fold">
+<summary>Show code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co"># cache: true</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="co">#| message: false</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="co">#| warning: false</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="co"># we are running this code once straight in the concole. then using the .rbs files not to wait for the download each time</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a><span class="co"># nyc_boroughs &lt;- counties(state = "NY", cb = TRUE)|&gt; </span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a><span class="co">#   filter(NAME %in% c("New York", "Kings", "Queens", "Bronx", "Richmond")) |&gt; </span></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a><span class="co">#   mutate(</span></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a><span class="co">#     borough_name = case_when(</span></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a><span class="co">#       NAME == "New York"  ~ "Manhattan",</span></span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a><span class="co">#       NAME == "Kings"     ~ "Brooklyn",</span></span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a><span class="co">#       NAME == "Richmond"  ~ "Staten Island",</span></span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a><span class="co">#       TRUE                ~ NAME </span></span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a><span class="co">#     )</span></span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a><span class="co">#   )</span></span>
+<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a><span class="co"># nyc_bbox &lt;- c(xmin = -74.259, ymin = 40.477, xmax = -73.700, ymax = 40.917)</span></span>
+<span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-20"><a href="#cb6-20" aria-hidden="true" tabindex="-1"></a><span class="co"># nyc_streets &lt;- opq(bbox = nyc_bbox) |&gt;</span></span>
+<span id="cb6-21"><a href="#cb6-21" aria-hidden="true" tabindex="-1"></a><span class="co">#   add_osm_feature(</span></span>
+<span id="cb6-22"><a href="#cb6-22" aria-hidden="true" tabindex="-1"></a><span class="co">#     key = "highway",</span></span>
+<span id="cb6-23"><a href="#cb6-23" aria-hidden="true" tabindex="-1"></a><span class="co">#     value = c("motorway", "trunk", "primary", "secondary", "tertiary")</span></span>
+<span id="cb6-24"><a href="#cb6-24" aria-hidden="true" tabindex="-1"></a><span class="co">#   ) |&gt;</span></span>
+<span id="cb6-25"><a href="#cb6-25" aria-hidden="true" tabindex="-1"></a><span class="co">#   osmdata_sf()</span></span>
+<span id="cb6-26"><a href="#cb6-26" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-27"><a href="#cb6-27" aria-hidden="true" tabindex="-1"></a><span class="co"># nyc_streets_lines &lt;- nyc_streets$osm_lines |&gt;</span></span>
+<span id="cb6-28"><a href="#cb6-28" aria-hidden="true" tabindex="-1"></a><span class="co">#   st_transform(st_crs(nyc_boroughs))</span></span>
+<span id="cb6-29"><a href="#cb6-29" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-30"><a href="#cb6-30" aria-hidden="true" tabindex="-1"></a><span class="co"># nyc_boroughs_transformed &lt;- st_transform(nyc_boroughs, st_crs(nyc_streets$osm_lines))</span></span>
+<span id="cb6-31"><a href="#cb6-31" aria-hidden="true" tabindex="-1"></a><span class="co"># nyc_streets_clipped &lt;- st_intersection(nyc_streets$osm_lines, nyc_boroughs_transformed)</span></span>
+<span id="cb6-32"><a href="#cb6-32" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-33"><a href="#cb6-33" aria-hidden="true" tabindex="-1"></a><span class="co"># saveRDS(nyc_boroughs_transformed, "data/nyc_boroughs.rds")</span></span>
+<span id="cb6-34"><a href="#cb6-34" aria-hidden="true" tabindex="-1"></a><span class="co"># saveRDS(nyc_streets_clipped_processed, "data/nyc_streets.rds")</span></span>
+<span id="cb6-35"><a href="#cb6-35" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-36"><a href="#cb6-36" aria-hidden="true" tabindex="-1"></a>nyc_boroughs_transformed <span class="ot">&lt;-</span> <span class="fu">readRDS</span>(<span class="st">"data/nyc_boroughs.rds"</span>)</span>
+<span id="cb6-37"><a href="#cb6-37" aria-hidden="true" tabindex="-1"></a>nyc_streets_clipped <span class="ot">&lt;-</span> <span class="fu">readRDS</span>(<span class="st">"data/nyc_streets.rds"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</div>
+</section>
+</section>
+<section id="visualiazations-and-insights" class="level2">
+<h2 class="anchored" data-anchor-id="visualiazations-and-insights">Visualiazations and Insights</h2>
+<section id="the-when-and-who-of-nyc-crime" class="level3">
+<h3 class="anchored" data-anchor-id="the-when-and-who-of-nyc-crime">The “When” and “Who” of NYC Crime</h3>
+<div class="cell">
+<details class="code-fold">
+<summary>Show code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>arrests <span class="sc">|&gt;</span> <span class="co"># improved glimpse version via a proposition from chat</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">collect</span>() <span class="sc">|&gt;</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">slice_sample</span>(<span class="at">n =</span> <span class="dv">5</span>) <span class="sc">|&gt;</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">kable</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<colgroup>
+<col style="width: 4%">
+<col style="width: 4%">
+<col style="width: 2%">
+<col style="width: 10%">
+<col style="width: 2%">
+<col style="width: 11%">
+<col style="width: 4%">
+<col style="width: 4%">
+<col style="width: 4%">
+<col style="width: 5%">
+<col style="width: 6%">
+<col style="width: 3%">
+<col style="width: 3%">
+<col style="width: 5%">
+<col style="width: 4%">
+<col style="width: 4%">
+<col style="width: 3%">
+<col style="width: 3%">
+<col style="width: 12%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: right;">arrest_key</th>
+<th style="text-align: left;">arrest_date</th>
+<th style="text-align: right;">pd_cd</th>
+<th style="text-align: left;">pd_desc</th>
+<th style="text-align: right;">ky_cd</th>
+<th style="text-align: left;">ofns_desc</th>
+<th style="text-align: left;">law_code</th>
+<th style="text-align: left;">law_cat_cd</th>
+<th style="text-align: left;">arrest_boro</th>
+<th style="text-align: right;">arrest_precinct</th>
+<th style="text-align: right;">jurisdiction_code</th>
+<th style="text-align: left;">age_group</th>
+<th style="text-align: left;">perp_sex</th>
+<th style="text-align: left;">perp_race</th>
+<th style="text-align: right;">x_coord_cd</th>
+<th style="text-align: right;">y_coord_cd</th>
+<th style="text-align: right;">latitude</th>
+<th style="text-align: right;">longitude</th>
+<th style="text-align: left;">new_georeferenced_column</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">303738689</td>
+<td style="text-align: left;">2025-03-27</td>
+<td style="text-align: right;">515</td>
+<td style="text-align: left;">CONTROLLED SUBSTANCE,SALE 3</td>
+<td style="text-align: right;">117</td>
+<td style="text-align: left;">DANGEROUS DRUGS</td>
+<td style="text-align: left;">PL 2203901</td>
+<td style="text-align: left;">F</td>
+<td style="text-align: left;">M</td>
+<td style="text-align: right;">25</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: left;">25-44</td>
+<td style="text-align: left;">M</td>
+<td style="text-align: left;">BLACK HISPANIC</td>
+<td style="text-align: right;">1000581</td>
+<td style="text-align: right;">231070</td>
+<td style="text-align: right;">40.80090</td>
+<td style="text-align: right;">-73.94101</td>
+<td style="text-align: left;">POINT (-73.941012 40.800904)</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">308448317</td>
+<td style="text-align: left;">2025-06-21</td>
+<td style="text-align: right;">968</td>
+<td style="text-align: left;">UNLICENSED OPERATOR</td>
+<td style="text-align: right;">880</td>
+<td style="text-align: left;">MOVING INFRACTIONS</td>
+<td style="text-align: left;">VTL05110E5</td>
+<td style="text-align: left;">F</td>
+<td style="text-align: left;">B</td>
+<td style="text-align: right;">47</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: left;">45-64</td>
+<td style="text-align: left;">F</td>
+<td style="text-align: left;">BLACK</td>
+<td style="text-align: right;">1024381</td>
+<td style="text-align: right;">265139</td>
+<td style="text-align: right;">40.89433</td>
+<td style="text-align: right;">-73.85485</td>
+<td style="text-align: left;">POINT (-73.85484629 40.89432779)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">298939045</td>
+<td style="text-align: left;">2025-01-05</td>
+<td style="text-align: right;">101</td>
+<td style="text-align: left;">ASSAULT 3</td>
+<td style="text-align: right;">344</td>
+<td style="text-align: left;">ASSAULT 3 &amp; RELATED OFFENSES</td>
+<td style="text-align: left;">PL 1200001</td>
+<td style="text-align: left;">M</td>
+<td style="text-align: left;">K</td>
+<td style="text-align: right;">81</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: left;">25-44</td>
+<td style="text-align: left;">M</td>
+<td style="text-align: left;">BLACK</td>
+<td style="text-align: right;">1005312</td>
+<td style="text-align: right;">190540</td>
+<td style="text-align: right;">40.68965</td>
+<td style="text-align: right;">-73.92405</td>
+<td style="text-align: left;">POINT (-73.924053 40.689649)</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">301070994</td>
+<td style="text-align: left;">2025-02-14</td>
+<td style="text-align: right;">705</td>
+<td style="text-align: left;">FORGERY,ETC.-MISD.</td>
+<td style="text-align: right;">358</td>
+<td style="text-align: left;">OFFENSES INVOLVING FRAUD</td>
+<td style="text-align: left;">PL 1702000</td>
+<td style="text-align: left;">M</td>
+<td style="text-align: left;">M</td>
+<td style="text-align: right;">18</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: left;">25-44</td>
+<td style="text-align: left;">M</td>
+<td style="text-align: left;">WHITE HISPANIC</td>
+<td style="text-align: right;">986871</td>
+<td style="text-align: right;">216638</td>
+<td style="text-align: right;">40.76131</td>
+<td style="text-align: right;">-73.99054</td>
+<td style="text-align: left;">POINT (-73.990539 40.761308)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">300230188</td>
+<td style="text-align: left;">2025-01-29</td>
+<td style="text-align: right;">268</td>
+<td style="text-align: left;">CRIMINAL MIS 2 &amp; 3</td>
+<td style="text-align: right;">121</td>
+<td style="text-align: left;">CRIMINAL MISCHIEF &amp; RELATED OF</td>
+<td style="text-align: left;">PL 1450502</td>
+<td style="text-align: left;">F</td>
+<td style="text-align: left;">M</td>
+<td style="text-align: right;">32</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: left;">25-44</td>
+<td style="text-align: left;">M</td>
+<td style="text-align: left;">WHITE HISPANIC</td>
+<td style="text-align: right;">999439</td>
+<td style="text-align: right;">236537</td>
+<td style="text-align: right;">40.81591</td>
+<td style="text-align: right;">-73.94512</td>
+<td style="text-align: left;">POINT (-73.945124 40.815913)</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="cell">
+<details class="code-fold">
+<summary>Show code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>arrests <span class="ot">&lt;-</span> arrests <span class="sc">|&gt;</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">arrest_date   =</span> <span class="fu">as.Date</span>(arrest_date)) <span class="sc">|&gt;</span>  </span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">month =</span> <span class="fu">month</span>(arrest_date))</span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>monthly_arrests <span class="ot">&lt;-</span> arrests <span class="sc">|&gt;</span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(month) <span class="sc">|&gt;</span></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="at">total_arrests =</span> <span class="fu">n</span>())</span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(monthly_arrests, <span class="fu">aes</span>(<span class="at">x =</span> month, <span class="at">y =</span> total_arrests)) <span class="sc">+</span></span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>(<span class="at">color =</span> <span class="st">"#ffe000"</span>, <span class="at">linewidth =</span> <span class="fl">1.2</span>) <span class="sc">+</span></span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="at">size =</span> <span class="dv">3</span>, <span class="at">color =</span> <span class="st">"darkorange"</span>) <span class="sc">+</span></span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_x_continuous</span>(<span class="at">breaks =</span> <span class="dv">1</span><span class="sc">:</span><span class="dv">12</span>, <span class="at">labels =</span> month.abb) <span class="sc">+</span></span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_y_continuous</span>( <span class="at">limits =</span> <span class="fu">c</span>(<span class="dv">22000</span>, <span class="dv">25000</span>),</span>
+<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a>                      <span class="at">labels =</span> <span class="fu">label_number</span>(<span class="at">scale_cut =</span> <span class="fu">cut_short_scale</span>())) <span class="sc">+</span></span>
+<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(</span>
+<span id="cb8-17"><a href="#cb8-17" aria-hidden="true" tabindex="-1"></a>    <span class="at">title =</span> <span class="st">"Number of Arrests in NYC by Month"</span>,</span>
+<span id="cb8-18"><a href="#cb8-18" aria-hidden="true" tabindex="-1"></a>    <span class="at">x =</span> <span class="st">"Month"</span>,</span>
+<span id="cb8-19"><a href="#cb8-19" aria-hidden="true" tabindex="-1"></a>    <span class="at">y =</span> <span class="st">"Total Arrests"</span></span>
+<span id="cb8-20"><a href="#cb8-20" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb8-21"><a href="#cb8-21" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_text</span>(</span>
+<span id="cb8-22"><a href="#cb8-22" aria-hidden="true" tabindex="-1"></a>    <span class="fu">aes</span>(<span class="at">label =</span> <span class="fu">label_number</span>(<span class="at">scale_cut =</span> <span class="fu">cut_short_scale</span>(), <span class="at">accuracy =</span> <span class="fl">0.1</span>)(total_arrests)), <span class="co"># новий спосіб</span></span>
+<span id="cb8-23"><a href="#cb8-23" aria-hidden="true" tabindex="-1"></a>    <span class="at">vjust =</span> <span class="sc">-</span><span class="fl">0.7</span>,</span>
+<span id="cb8-24"><a href="#cb8-24" aria-hidden="true" tabindex="-1"></a>    <span class="at">size =</span> <span class="fl">3.5</span>,</span>
+<span id="cb8-25"><a href="#cb8-25" aria-hidden="true" tabindex="-1"></a>    <span class="at">color =</span> <span class="st">"#e74d11"</span></span>
+<span id="cb8-26"><a href="#cb8-26" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb8-27"><a href="#cb8-27" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>(<span class="at">base_size =</span> <span class="dv">14</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="p1_files/figure-html/tanya_first_graph-1.png" class="img-fluid figure-img" width="1152"></p>
+</figure>
+</div>
+</div>
+</div>
+<div class="cell">
+<details class="code-fold">
+<summary>Show code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>shooting <span class="sc">|&gt;</span> <span class="co"># improved glimpse version via a proposition from chat</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">collect</span>() <span class="sc">|&gt;</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">slice_sample</span>(<span class="at">n =</span> <span class="dv">10</span>) <span class="sc">|&gt;</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">kable</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<colgroup>
+<col style="width: 4%">
+<col style="width: 3%">
+<col style="width: 3%">
+<col style="width: 3%">
+<col style="width: 5%">
+<col style="width: 2%">
+<col style="width: 5%">
+<col style="width: 6%">
+<col style="width: 8%">
+<col style="width: 7%">
+<col style="width: 4%">
+<col style="width: 2%">
+<col style="width: 3%">
+<col style="width: 4%">
+<col style="width: 2%">
+<col style="width: 4%">
+<col style="width: 3%">
+<col style="width: 3%">
+<col style="width: 2%">
+<col style="width: 3%">
+<col style="width: 10%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: right;">incident_key</th>
+<th style="text-align: left;">occur_date</th>
+<th style="text-align: left;">occur_time</th>
+<th style="text-align: left;">boro</th>
+<th style="text-align: left;">loc_of_occur_desc</th>
+<th style="text-align: right;">precinct</th>
+<th style="text-align: right;">jurisdiction_code</th>
+<th style="text-align: left;">loc_classfctn_desc</th>
+<th style="text-align: left;">location_desc</th>
+<th style="text-align: left;">statistical_murder_flag</th>
+<th style="text-align: left;">perp_age_group</th>
+<th style="text-align: left;">perp_sex</th>
+<th style="text-align: left;">perp_race</th>
+<th style="text-align: left;">vic_age_group</th>
+<th style="text-align: left;">vic_sex</th>
+<th style="text-align: left;">vic_race</th>
+<th style="text-align: left;">x_coord_cd</th>
+<th style="text-align: left;">y_coord_cd</th>
+<th style="text-align: right;">latitude</th>
+<th style="text-align: right;">longitude</th>
+<th style="text-align: left;">new_georeferenced_column</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">308800535</td>
+<td style="text-align: left;">2025-06-28</td>
+<td style="text-align: left;">15:53:00</td>
+<td style="text-align: left;">BRONX</td>
+<td style="text-align: left;">OUTSIDE</td>
+<td style="text-align: right;">44</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: left;">STREET</td>
+<td style="text-align: left;">(null)</td>
+<td style="text-align: left;">N</td>
+<td style="text-align: left;">(null)</td>
+<td style="text-align: left;">(null)</td>
+<td style="text-align: left;">(null)</td>
+<td style="text-align: left;">25-44</td>
+<td style="text-align: left;">M</td>
+<td style="text-align: left;">WHITE HISPANIC</td>
+<td style="text-align: left;">1,008,787</td>
+<td style="text-align: left;">247,061</td>
+<td style="text-align: right;">40.84478</td>
+<td style="text-align: right;">-73.91132</td>
+<td style="text-align: left;">POINT (-73.911317 40.844776)</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">303829750</td>
+<td style="text-align: left;">2025-03-28</td>
+<td style="text-align: left;">23:50:00</td>
+<td style="text-align: left;">MANHATTAN</td>
+<td style="text-align: left;">OUTSIDE</td>
+<td style="text-align: right;">32</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: left;">HOUSING</td>
+<td style="text-align: left;">MULTI DWELL - APT BUILD</td>
+<td style="text-align: left;">N</td>
+<td style="text-align: left;">18-24</td>
+<td style="text-align: left;">M</td>
+<td style="text-align: left;">BLACK</td>
+<td style="text-align: left;">25-44</td>
+<td style="text-align: left;">M</td>
+<td style="text-align: left;">BLACK</td>
+<td style="text-align: left;">999,874</td>
+<td style="text-align: left;">238,251</td>
+<td style="text-align: right;">40.82061</td>
+<td style="text-align: right;">-73.94355</td>
+<td style="text-align: left;">POINT (-73.94355 40.820614)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">304789869</td>
+<td style="text-align: left;">2025-04-15</td>
+<td style="text-align: left;">11:00:00</td>
+<td style="text-align: left;">BRONX</td>
+<td style="text-align: left;">OUTSIDE</td>
+<td style="text-align: right;">50</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: left;">STREET</td>
+<td style="text-align: left;">(null)</td>
+<td style="text-align: left;">N</td>
+<td style="text-align: left;">18-24</td>
+<td style="text-align: left;">M</td>
+<td style="text-align: left;">BLACK</td>
+<td style="text-align: left;">18-24</td>
+<td style="text-align: left;">M</td>
+<td style="text-align: left;">BLACK</td>
+<td style="text-align: left;">1,011,732</td>
+<td style="text-align: left;">257,490</td>
+<td style="text-align: right;">40.87339</td>
+<td style="text-align: right;">-73.90063</td>
+<td style="text-align: left;">POINT (-73.900629 40.873392)</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">304199342</td>
+<td style="text-align: left;">2025-04-04</td>
+<td style="text-align: left;">14:29:00</td>
+<td style="text-align: left;">MANHATTAN</td>
+<td style="text-align: left;">OUTSIDE</td>
+<td style="text-align: right;">34</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: left;">STREET</td>
+<td style="text-align: left;">(null)</td>
+<td style="text-align: left;">N</td>
+<td style="text-align: left;">&lt;18</td>
+<td style="text-align: left;">M</td>
+<td style="text-align: left;">BLACK</td>
+<td style="text-align: left;">18-24</td>
+<td style="text-align: left;">M</td>
+<td style="text-align: left;">BLACK HISPANIC</td>
+<td style="text-align: left;">1,005,517</td>
+<td style="text-align: left;">255,164</td>
+<td style="text-align: right;">40.86702</td>
+<td style="text-align: right;">-73.92311</td>
+<td style="text-align: left;">POINT (-73.92310894 40.86701515)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">308096531</td>
+<td style="text-align: left;">2025-06-15</td>
+<td style="text-align: left;">04:45:00</td>
+<td style="text-align: left;">BRONX</td>
+<td style="text-align: left;">OUTSIDE</td>
+<td style="text-align: right;">52</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: left;">STREET</td>
+<td style="text-align: left;">(null)</td>
+<td style="text-align: left;">N</td>
+<td style="text-align: left;">(null)</td>
+<td style="text-align: left;">(null)</td>
+<td style="text-align: left;">(null)</td>
+<td style="text-align: left;">18-24</td>
+<td style="text-align: left;">M</td>
+<td style="text-align: left;">WHITE HISPANIC</td>
+<td style="text-align: left;">1,018,056</td>
+<td style="text-align: left;">262,031</td>
+<td style="text-align: right;">40.88583</td>
+<td style="text-align: right;">-73.87774</td>
+<td style="text-align: left;">POINT (-73.877738 40.885834)</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">301565779</td>
+<td style="text-align: left;">2025-02-23</td>
+<td style="text-align: left;">23:41:00</td>
+<td style="text-align: left;">BRONX</td>
+<td style="text-align: left;">INSIDE</td>
+<td style="text-align: right;">43</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: left;">DWELLING</td>
+<td style="text-align: left;">MULTI DWELL - APT BUILD</td>
+<td style="text-align: left;">N</td>
+<td style="text-align: left;">&lt;18</td>
+<td style="text-align: left;">M</td>
+<td style="text-align: left;">BLACK</td>
+<td style="text-align: left;">45-64</td>
+<td style="text-align: left;">F</td>
+<td style="text-align: left;">WHITE HISPANIC</td>
+<td style="text-align: left;">1,024,656</td>
+<td style="text-align: left;">245,412</td>
+<td style="text-align: right;">40.84019</td>
+<td style="text-align: right;">-73.85397</td>
+<td style="text-align: left;">POINT (-73.85397 40.840191)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">305034043</td>
+<td style="text-align: left;">2025-04-20</td>
+<td style="text-align: left;">01:57:00</td>
+<td style="text-align: left;">BROOKLYN</td>
+<td style="text-align: left;">OUTSIDE</td>
+<td style="text-align: right;">81</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: left;">HOUSING</td>
+<td style="text-align: left;">MULTI DWELL - PUBLIC HOUS</td>
+<td style="text-align: left;">N</td>
+<td style="text-align: left;">(null)</td>
+<td style="text-align: left;">(null)</td>
+<td style="text-align: left;">(null)</td>
+<td style="text-align: left;">18-24</td>
+<td style="text-align: left;">F</td>
+<td style="text-align: left;">BLACK</td>
+<td style="text-align: left;">1,003,207</td>
+<td style="text-align: left;">190,085</td>
+<td style="text-align: right;">40.68841</td>
+<td style="text-align: right;">-73.93164</td>
+<td style="text-align: left;">POINT (-73.931642 40.688406)</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">307645264</td>
+<td style="text-align: left;">2025-06-05</td>
+<td style="text-align: left;">21:55:00</td>
+<td style="text-align: left;">BRONX</td>
+<td style="text-align: left;">OUTSIDE</td>
+<td style="text-align: right;">42</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: left;">HOUSING</td>
+<td style="text-align: left;">MULTI DWELL - PUBLIC HOUS</td>
+<td style="text-align: left;">N</td>
+<td style="text-align: left;">(null)</td>
+<td style="text-align: left;">(null)</td>
+<td style="text-align: left;">(null)</td>
+<td style="text-align: left;">&lt;18</td>
+<td style="text-align: left;">M</td>
+<td style="text-align: left;">BLACK HISPANIC</td>
+<td style="text-align: left;">1,010,650</td>
+<td style="text-align: left;">240,263</td>
+<td style="text-align: right;">40.82611</td>
+<td style="text-align: right;">-73.90461</td>
+<td style="text-align: left;">POINT (-73.904608 40.826112)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">302818234</td>
+<td style="text-align: left;">2025-03-14</td>
+<td style="text-align: left;">16:24:00</td>
+<td style="text-align: left;">MANHATTAN</td>
+<td style="text-align: left;">OUTSIDE</td>
+<td style="text-align: right;">32</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: left;">STREET</td>
+<td style="text-align: left;">(null)</td>
+<td style="text-align: left;">N</td>
+<td style="text-align: left;">18-24</td>
+<td style="text-align: left;">M</td>
+<td style="text-align: left;">BLACK</td>
+<td style="text-align: left;">&lt;18</td>
+<td style="text-align: left;">M</td>
+<td style="text-align: left;">BLACK</td>
+<td style="text-align: left;">1,001,420</td>
+<td style="text-align: left;">241,474</td>
+<td style="text-align: right;">40.82946</td>
+<td style="text-align: right;">-73.93796</td>
+<td style="text-align: left;">POINT (-73.937956 40.829459)</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">308763150</td>
+<td style="text-align: left;">2025-06-28</td>
+<td style="text-align: left;">03:53:00</td>
+<td style="text-align: left;">BROOKLYN</td>
+<td style="text-align: left;">OUTSIDE</td>
+<td style="text-align: right;">67</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: left;">STREET</td>
+<td style="text-align: left;">(null)</td>
+<td style="text-align: left;">N</td>
+<td style="text-align: left;">(null)</td>
+<td style="text-align: left;">(null)</td>
+<td style="text-align: left;">(null)</td>
+<td style="text-align: left;">18-24</td>
+<td style="text-align: left;">M</td>
+<td style="text-align: left;">BLACK</td>
+<td style="text-align: left;">1,006,699</td>
+<td style="text-align: left;">179,366</td>
+<td style="text-align: right;">40.65897</td>
+<td style="text-align: right;">-73.91909</td>
+<td style="text-align: left;">POINT (-73.91908854 40.65896644)</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="cell">
+<details class="code-fold">
+<summary>Show code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>shooting <span class="ot">&lt;-</span> shooting <span class="sc">|&gt;</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">occur_date   =</span> <span class="fu">as.Date</span>(occur_date)) <span class="sc">|&gt;</span>  </span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">month =</span> <span class="fu">month</span>(occur_date))</span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>monthly_shooting <span class="ot">&lt;-</span> shooting <span class="sc">|&gt;</span></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(month) <span class="sc">|&gt;</span></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="at">total_shootings =</span> <span class="fu">n</span>())</span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(monthly_shooting, <span class="fu">aes</span>(<span class="at">x =</span> month, <span class="at">y =</span> total_shootings)) <span class="sc">+</span> </span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>(<span class="at">color =</span> <span class="st">"#ffa3a3"</span>, <span class="at">linewidth =</span> <span class="fl">1.2</span>) <span class="sc">+</span> </span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="at">size =</span> <span class="dv">3</span>, <span class="at">color =</span> <span class="st">"#a71b37"</span>) <span class="sc">+</span> </span>
+<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_x_continuous</span>(<span class="at">breaks =</span> <span class="dv">1</span><span class="sc">:</span><span class="dv">12</span>, <span class="at">labels =</span> month.abb) <span class="sc">+</span> </span>
+<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_y_continuous</span>(<span class="at">limits =</span> <span class="fu">c</span>(<span class="dv">40</span>, <span class="dv">110</span>),</span>
+<span id="cb10-15"><a href="#cb10-15" aria-hidden="true" tabindex="-1"></a>                     <span class="at">labels =</span> <span class="fu">label_number</span>(<span class="at">scale_cut =</span> <span class="fu">cut_short_scale</span>())) <span class="sc">+</span> </span>
+<span id="cb10-16"><a href="#cb10-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>( </span>
+<span id="cb10-17"><a href="#cb10-17" aria-hidden="true" tabindex="-1"></a>    <span class="at">title =</span> <span class="st">"Number of Shootings in NYC by Month"</span>, </span>
+<span id="cb10-18"><a href="#cb10-18" aria-hidden="true" tabindex="-1"></a>    <span class="at">x =</span> <span class="st">"Month"</span>, </span>
+<span id="cb10-19"><a href="#cb10-19" aria-hidden="true" tabindex="-1"></a>    <span class="at">y =</span> <span class="st">"Total Shootings"</span> ) <span class="sc">+</span> </span>
+<span id="cb10-20"><a href="#cb10-20" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_text</span>(</span>
+<span id="cb10-21"><a href="#cb10-21" aria-hidden="true" tabindex="-1"></a>    <span class="fu">aes</span>(<span class="at">label =</span> <span class="fu">as.integer</span>(total_shootings)),</span>
+<span id="cb10-22"><a href="#cb10-22" aria-hidden="true" tabindex="-1"></a>    <span class="at">vjust =</span> <span class="sc">-</span><span class="fl">0.7</span>,</span>
+<span id="cb10-23"><a href="#cb10-23" aria-hidden="true" tabindex="-1"></a>    <span class="at">size =</span> <span class="fl">3.5</span>,</span>
+<span id="cb10-24"><a href="#cb10-24" aria-hidden="true" tabindex="-1"></a>    <span class="at">color =</span> <span class="st">"#721536"</span>,</span>
+<span id="cb10-25"><a href="#cb10-25" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb10-26"><a href="#cb10-26" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>(<span class="at">base_size =</span> <span class="dv">14</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="p1_files/figure-html/tanya_second_graph-1.png" class="img-fluid figure-img" width="1152"></p>
+</figure>
+</div>
+</div>
+</div>
+<p><strong>Interpretation</strong> of the fact that both arrests and shootings when up in April: this looks like a seasonal event, as in the month of February we see the biggest dip. Peaking with 24.5K shootings and 108 arrests we can take stock that spring weather may be the most suitable for this “type of activities”, even better then warm summer. Potentially this is due to worse visibility due to fog, rain(the relation of arrests in March and May show dramatically less arrests even though the number of shootings stays almost at the highest point.)</p>
+</section>
+<section id="gender" class="level3">
+<h3 class="anchored" data-anchor-id="gender">Gender</h3>
+<div class="cell">
+<details class="code-fold">
+<summary>Show code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>arrests <span class="ot">&lt;-</span> arrests <span class="sc">|&gt;</span> </span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>( <span class="at">category =</span> <span class="fu">crime_category</span>(pd_desc)) <span class="co"># for the visualiations that follow</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>gb_sex_category <span class="ot">&lt;-</span> arrests <span class="sc">|&gt;</span></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(category <span class="sc">!=</span> <span class="st">"Other"</span>) <span class="sc">|&gt;</span></span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(category, perp_sex) <span class="sc">|&gt;</span></span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="at">n =</span> <span class="fu">n</span>(), <span class="at">.groups =</span> <span class="st">"drop"</span>) <span class="sc">|&gt;</span></span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(category) <span class="sc">|&gt;</span></span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">percent =</span> <span class="dv">100</span> <span class="sc">*</span> n <span class="sc">/</span> <span class="fu">sum</span>(n))</span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-12"><a href="#cb11-12" aria-hidden="true" tabindex="-1"></a>gb_sex_category <span class="sc">|&gt;</span></span>
+<span id="cb11-13"><a href="#cb11-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">category =</span> <span class="fu">recode</span>(category,</span>
+<span id="cb11-14"><a href="#cb11-14" aria-hidden="true" tabindex="-1"></a>                                 <span class="st">"Financial/White Collar"</span> <span class="ot">=</span> <span class="st">"Financial"</span>,</span>
+<span id="cb11-15"><a href="#cb11-15" aria-hidden="true" tabindex="-1"></a>                                 <span class="st">"Public Order/Admin"</span> <span class="ot">=</span> <span class="st">"Public/Admin"</span>,</span>
+<span id="cb11-16"><a href="#cb11-16" aria-hidden="true" tabindex="-1"></a>                                 <span class="at">.default =</span> category))<span class="sc">|&gt;</span></span>
+<span id="cb11-17"><a href="#cb11-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">perp_sex =</span> <span class="fu">recode</span>(perp_sex, <span class="st">"M"</span> <span class="ot">=</span> <span class="st">"Male"</span>, <span class="st">"F"</span> <span class="ot">=</span> <span class="st">"Female"</span>)) <span class="sc">|&gt;</span></span>
+<span id="cb11-18"><a href="#cb11-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(</span>
+<span id="cb11-19"><a href="#cb11-19" aria-hidden="true" tabindex="-1"></a>    <span class="at">x =</span> <span class="fu">reorder</span>(category, <span class="sc">-</span>percent),</span>
+<span id="cb11-20"><a href="#cb11-20" aria-hidden="true" tabindex="-1"></a>    <span class="at">y =</span> percent,</span>
+<span id="cb11-21"><a href="#cb11-21" aria-hidden="true" tabindex="-1"></a>    <span class="at">fill =</span> perp_sex</span>
+<span id="cb11-22"><a href="#cb11-22" aria-hidden="true" tabindex="-1"></a>  )) <span class="sc">+</span></span>
+<span id="cb11-23"><a href="#cb11-23" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_col</span>(<span class="at">position =</span> <span class="st">"fill"</span>) <span class="sc">+</span>  </span>
+<span id="cb11-24"><a href="#cb11-24" aria-hidden="true" tabindex="-1"></a>  <span class="fu">coord_flip</span>() <span class="sc">+</span></span>
+<span id="cb11-25"><a href="#cb11-25" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_y_continuous</span>(<span class="at">labels =</span> <span class="fu">percent_format</span>()) <span class="sc">+</span></span>
+<span id="cb11-26"><a href="#cb11-26" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_fill_manual</span>(<span class="at">values =</span> <span class="fu">c</span>(<span class="st">"Male"</span> <span class="ot">=</span> <span class="st">"#abc4ff"</span>, <span class="st">"Female"</span> <span class="ot">=</span> <span class="st">"#fcb0f3"</span>)) <span class="sc">+</span></span>
+<span id="cb11-27"><a href="#cb11-27" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(</span>
+<span id="cb11-28"><a href="#cb11-28" aria-hidden="true" tabindex="-1"></a>    <span class="at">title =</span> <span class="st">"Gender Distribution by Crime Category in NYC"</span>,</span>
+<span id="cb11-29"><a href="#cb11-29" aria-hidden="true" tabindex="-1"></a>    <span class="at">x =</span> <span class="st">"Crime Category"</span>,</span>
+<span id="cb11-30"><a href="#cb11-30" aria-hidden="true" tabindex="-1"></a>    <span class="at">y =</span> <span class="st">"Proportion of Arrests"</span>,</span>
+<span id="cb11-31"><a href="#cb11-31" aria-hidden="true" tabindex="-1"></a>    <span class="at">fill =</span> <span class="st">"Sex"</span></span>
+<span id="cb11-32"><a href="#cb11-32" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb11-33"><a href="#cb11-33" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_text</span>(</span>
+<span id="cb11-34"><a href="#cb11-34" aria-hidden="true" tabindex="-1"></a>    <span class="fu">aes</span>(</span>
+<span id="cb11-35"><a href="#cb11-35" aria-hidden="true" tabindex="-1"></a>      <span class="at">label =</span> <span class="fu">paste0</span>(<span class="fu">round</span>(percent, <span class="dv">1</span>), <span class="st">"%"</span>),</span>
+<span id="cb11-36"><a href="#cb11-36" aria-hidden="true" tabindex="-1"></a>      <span class="at">group =</span> perp_sex</span>
+<span id="cb11-37"><a href="#cb11-37" aria-hidden="true" tabindex="-1"></a>    ),</span>
+<span id="cb11-38"><a href="#cb11-38" aria-hidden="true" tabindex="-1"></a>    <span class="at">position =</span> <span class="fu">position_fill</span>(<span class="at">vjust =</span> <span class="fl">0.5</span>),</span>
+<span id="cb11-39"><a href="#cb11-39" aria-hidden="true" tabindex="-1"></a>    <span class="at">color =</span> <span class="st">"black"</span>,</span>
+<span id="cb11-40"><a href="#cb11-40" aria-hidden="true" tabindex="-1"></a>    <span class="at">size =</span> <span class="fl">3.5</span></span>
+<span id="cb11-41"><a href="#cb11-41" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb11-42"><a href="#cb11-42" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>(<span class="at">base_size =</span> <span class="dv">14</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="p1_files/figure-html/tanya_third_graph-1.png" class="img-fluid figure-img" width="1152"></p>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="race" class="level3">
+<h3 class="anchored" data-anchor-id="race">Race</h3>
+<div class="cell">
+<details class="code-fold">
+<summary>Show code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>my_colors <span class="ot">&lt;-</span> <span class="fu">c</span>(</span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>  <span class="st">"#f72585"</span>,</span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>  <span class="st">"#7209b7"</span>,</span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>  <span class="st">"#3a0ca3"</span>,</span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>  <span class="st">"#4361ee"</span>,</span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>  <span class="st">"#4cc9f0"</span></span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a>race_data <span class="ot">&lt;-</span> arrests <span class="sc">|&gt;</span></span>
+<span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="sc">!</span><span class="fu">is.na</span>(perp_race)) <span class="sc">|&gt;</span></span>
+<span id="cb12-13"><a href="#cb12-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(perp_race) <span class="sc">|&gt;</span></span>
+<span id="cb12-14"><a href="#cb12-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="at">n =</span> <span class="fu">n</span>(), <span class="at">.groups =</span> <span class="st">"drop"</span>) <span class="sc">|&gt;</span></span>
+<span id="cb12-15"><a href="#cb12-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb12-16"><a href="#cb12-16" aria-hidden="true" tabindex="-1"></a>    <span class="at">percent =</span> n <span class="sc">/</span> <span class="fu">sum</span>(n) <span class="sc">*</span> <span class="dv">100</span></span>
+<span id="cb12-17"><a href="#cb12-17" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb12-18"><a href="#cb12-18" aria-hidden="true" tabindex="-1"></a>race_data <span class="ot">&lt;-</span> race_data <span class="sc">|&gt;</span></span>
+<span id="cb12-19"><a href="#cb12-19" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(perp_race<span class="sc">!=</span><span class="st">"UNKNOWN"</span> <span class="sc">&amp;</span> perp_race<span class="sc">!=</span><span class="st">"AMERICAN INDIAN/ALASKAN NATIVE"</span>)<span class="sc">|&gt;</span></span>
+<span id="cb12-20"><a href="#cb12-20" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(<span class="fu">desc</span>(perp_race)) <span class="sc">|&gt;</span></span>
+<span id="cb12-21"><a href="#cb12-21" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb12-22"><a href="#cb12-22" aria-hidden="true" tabindex="-1"></a>    <span class="at">ypos =</span> <span class="fu">cumsum</span>(percent) <span class="sc">-</span> percent <span class="sc">/</span> <span class="dv">2</span>,</span>
+<span id="cb12-23"><a href="#cb12-23" aria-hidden="true" tabindex="-1"></a>    <span class="at">angle =</span> <span class="dv">90</span> <span class="sc">-</span> <span class="dv">360</span> <span class="sc">*</span> ypos <span class="sc">/</span> <span class="fu">sum</span>(percent)  </span>
+<span id="cb12-24"><a href="#cb12-24" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb12-25"><a href="#cb12-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-26"><a href="#cb12-26" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(race_data, <span class="fu">aes</span>(<span class="at">x =</span> <span class="dv">2</span>, <span class="at">y =</span> percent, <span class="at">fill =</span> perp_race)) <span class="sc">+</span></span>
+<span id="cb12-27"><a href="#cb12-27" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_col</span>() <span class="sc">+</span></span>
+<span id="cb12-28"><a href="#cb12-28" aria-hidden="true" tabindex="-1"></a>  <span class="fu">coord_polar</span>(<span class="at">theta =</span> <span class="st">"y"</span>) <span class="sc">+</span></span>
+<span id="cb12-29"><a href="#cb12-29" aria-hidden="true" tabindex="-1"></a>  <span class="fu">xlim</span>(<span class="fl">0.5</span>, <span class="dv">3</span>) <span class="sc">+</span></span>
+<span id="cb12-30"><a href="#cb12-30" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_text</span>(<span class="fu">aes</span>(</span>
+<span id="cb12-31"><a href="#cb12-31" aria-hidden="true" tabindex="-1"></a>    <span class="at">x =</span> <span class="fl">2.6</span>,</span>
+<span id="cb12-32"><a href="#cb12-32" aria-hidden="true" tabindex="-1"></a>    <span class="at">y =</span> ypos,</span>
+<span id="cb12-33"><a href="#cb12-33" aria-hidden="true" tabindex="-1"></a>    <span class="at">label =</span> <span class="fu">paste0</span>(<span class="fu">round</span>(percent, <span class="dv">1</span>), <span class="st">"%"</span>),</span>
+<span id="cb12-34"><a href="#cb12-34" aria-hidden="true" tabindex="-1"></a>    <span class="at">angle =</span> <span class="fu">ifelse</span>(angle <span class="sc">&lt;</span> <span class="sc">-</span><span class="dv">90</span>, angle <span class="sc">+</span> <span class="dv">180</span>, angle), </span>
+<span id="cb12-35"><a href="#cb12-35" aria-hidden="true" tabindex="-1"></a>    <span class="at">hjust =</span> <span class="fu">ifelse</span>(angle <span class="sc">&lt;</span> <span class="sc">-</span><span class="dv">90</span>, <span class="dv">1</span>, <span class="dv">0</span>)</span>
+<span id="cb12-36"><a href="#cb12-36" aria-hidden="true" tabindex="-1"></a>  ), <span class="at">size =</span> <span class="dv">4</span>) <span class="sc">+</span></span>
+<span id="cb12-37"><a href="#cb12-37" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_fill_manual</span>(<span class="at">values =</span> my_colors) <span class="sc">+</span></span>
+<span id="cb12-38"><a href="#cb12-38" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_void</span>() <span class="sc">+</span></span>
+<span id="cb12-39"><a href="#cb12-39" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(</span>
+<span id="cb12-40"><a href="#cb12-40" aria-hidden="true" tabindex="-1"></a>    <span class="at">title =</span> <span class="st">"Distribution of Arrests by Race in NYC"</span>,</span>
+<span id="cb12-41"><a href="#cb12-41" aria-hidden="true" tabindex="-1"></a>    <span class="at">fill =</span> <span class="st">"Race"</span></span>
+<span id="cb12-42"><a href="#cb12-42" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb12-43"><a href="#cb12-43" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(</span>
+<span id="cb12-44"><a href="#cb12-44" aria-hidden="true" tabindex="-1"></a>    <span class="at">plot.title =</span> <span class="fu">element_text</span>(<span class="at">size =</span> <span class="dv">16</span>)</span>
+<span id="cb12-45"><a href="#cb12-45" aria-hidden="true" tabindex="-1"></a>  )</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="p1_files/figure-html/tanya_fourht_graph-1.png" class="img-fluid figure-img" width="1152"></p>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="age" class="level3">
+<h3 class="anchored" data-anchor-id="age">Age</h3>
+<div class="cell">
+<details class="code-fold">
+<summary>Show code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>age_data <span class="ot">&lt;-</span> arrests <span class="sc">|&gt;</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="sc">!</span><span class="fu">is.na</span>(age_group)) <span class="sc">|&gt;</span></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(age_group) <span class="sc">|&gt;</span></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="at">n =</span> <span class="fu">n</span>(), <span class="at">.groups =</span> <span class="st">"drop"</span>) <span class="sc">|&gt;</span></span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">percent =</span> n <span class="sc">/</span> <span class="fu">sum</span>(n) <span class="sc">*</span> <span class="dv">100</span>,</span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">label =</span> <span class="fu">paste0</span>(<span class="fu">round</span>(percent, <span class="dv">1</span>), <span class="st">"%"</span>)</span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">|&gt;</span></span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(<span class="fu">desc</span>(age_group)) <span class="sc">|&gt;</span></span>
+<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a>    <span class="at">ypos =</span> <span class="fu">cumsum</span>(percent) <span class="sc">-</span> percent <span class="sc">/</span> <span class="dv">2</span>,</span>
+<span id="cb13-12"><a href="#cb13-12" aria-hidden="true" tabindex="-1"></a>    <span class="at">angle =</span> <span class="dv">90</span> <span class="sc">-</span> <span class="dv">360</span> <span class="sc">*</span> ypos <span class="sc">/</span> <span class="fu">sum</span>(percent)</span>
+<span id="cb13-13"><a href="#cb13-13" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb13-14"><a href="#cb13-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-15"><a href="#cb13-15" aria-hidden="true" tabindex="-1"></a>age_colors <span class="ot">&lt;-</span> <span class="fu">c</span>(</span>
+<span id="cb13-16"><a href="#cb13-16" aria-hidden="true" tabindex="-1"></a>  <span class="st">"&lt;18"</span> <span class="ot">=</span> <span class="st">"#9b5de5"</span>,</span>
+<span id="cb13-17"><a href="#cb13-17" aria-hidden="true" tabindex="-1"></a>  <span class="st">"18-24"</span> <span class="ot">=</span> <span class="st">"#f15bb5"</span>,</span>
+<span id="cb13-18"><a href="#cb13-18" aria-hidden="true" tabindex="-1"></a>  <span class="st">"25-44"</span> <span class="ot">=</span> <span class="st">"#fee440"</span>,</span>
+<span id="cb13-19"><a href="#cb13-19" aria-hidden="true" tabindex="-1"></a>  <span class="st">"45-64"</span> <span class="ot">=</span> <span class="st">"#00bbf9"</span>,</span>
+<span id="cb13-20"><a href="#cb13-20" aria-hidden="true" tabindex="-1"></a>  <span class="st">"65+"</span> <span class="ot">=</span> <span class="st">"#cccccc"</span></span>
+<span id="cb13-21"><a href="#cb13-21" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb13-22"><a href="#cb13-22" aria-hidden="true" tabindex="-1"></a>age_data <span class="ot">&lt;-</span> age_data <span class="sc">%&gt;%</span></span>
+<span id="cb13-23"><a href="#cb13-23" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(<span class="fu">desc</span>(age_group)) <span class="sc">%&gt;%</span></span>
+<span id="cb13-24"><a href="#cb13-24" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb13-25"><a href="#cb13-25" aria-hidden="true" tabindex="-1"></a>    <span class="at">ymax =</span> <span class="fu">cumsum</span>(percent),</span>
+<span id="cb13-26"><a href="#cb13-26" aria-hidden="true" tabindex="-1"></a>    <span class="at">ymin =</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="fu">head</span>(ymax, <span class="at">n =</span> <span class="sc">-</span><span class="dv">1</span>)),</span>
+<span id="cb13-27"><a href="#cb13-27" aria-hidden="true" tabindex="-1"></a>    <span class="at">label_pos =</span> (ymax <span class="sc">+</span> ymin) <span class="sc">/</span> <span class="dv">2</span>,</span>
+<span id="cb13-28"><a href="#cb13-28" aria-hidden="true" tabindex="-1"></a>    <span class="at">angle =</span> <span class="dv">90</span> <span class="sc">-</span> <span class="dv">360</span> <span class="sc">*</span> label_pos <span class="sc">/</span> <span class="fu">sum</span>(percent)  </span>
+<span id="cb13-29"><a href="#cb13-29" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb13-30"><a href="#cb13-30" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb13-31"><a href="#cb13-31" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-32"><a href="#cb13-32" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-33"><a href="#cb13-33" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(age_data, <span class="fu">aes</span>(<span class="at">ymax =</span> ymax, <span class="at">ymin =</span> ymin, <span class="at">xmax =</span> <span class="dv">4</span>, <span class="at">xmin =</span> <span class="dv">2</span>, <span class="at">fill =</span> age_group)) <span class="sc">+</span></span>
+<span id="cb13-34"><a href="#cb13-34" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_rect</span>(<span class="at">color =</span> <span class="st">"white"</span>) <span class="sc">+</span></span>
+<span id="cb13-35"><a href="#cb13-35" aria-hidden="true" tabindex="-1"></a>  <span class="fu">coord_polar</span>(<span class="at">theta =</span> <span class="st">"y"</span>) <span class="sc">+</span></span>
+<span id="cb13-36"><a href="#cb13-36" aria-hidden="true" tabindex="-1"></a>  <span class="fu">xlim</span>(<span class="fu">c</span>(<span class="dv">0</span>, <span class="dv">5</span>)) <span class="sc">+</span>  </span>
+<span id="cb13-37"><a href="#cb13-37" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_text</span>(</span>
+<span id="cb13-38"><a href="#cb13-38" aria-hidden="true" tabindex="-1"></a>    <span class="fu">aes</span>(<span class="at">x =</span> <span class="fl">4.78</span>, <span class="at">y =</span> label_pos, <span class="at">label =</span> <span class="fu">paste0</span>(<span class="fu">round</span>(percent, <span class="dv">1</span>), <span class="st">"%"</span>),</span>
+<span id="cb13-39"><a href="#cb13-39" aria-hidden="true" tabindex="-1"></a>        <span class="at">angle =</span> <span class="fu">ifelse</span>(angle <span class="sc">&lt;</span> <span class="sc">-</span><span class="dv">90</span>, angle <span class="sc">+</span> <span class="dv">180</span>, angle)),</span>
+<span id="cb13-40"><a href="#cb13-40" aria-hidden="true" tabindex="-1"></a>    <span class="at">size =</span> <span class="dv">4</span>,</span>
+<span id="cb13-41"><a href="#cb13-41" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb13-42"><a href="#cb13-42" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb13-43"><a href="#cb13-43" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_fill_manual</span>(<span class="at">values =</span> age_colors) <span class="sc">+</span></span>
+<span id="cb13-44"><a href="#cb13-44" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_void</span>() <span class="sc">+</span></span>
+<span id="cb13-45"><a href="#cb13-45" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(</span>
+<span id="cb13-46"><a href="#cb13-46" aria-hidden="true" tabindex="-1"></a>    <span class="at">title =</span> <span class="st">"Distribution of Arrests by Age in NYC"</span>,</span>
+<span id="cb13-47"><a href="#cb13-47" aria-hidden="true" tabindex="-1"></a>    <span class="at">fill =</span> <span class="st">"Age Group"</span></span>
+<span id="cb13-48"><a href="#cb13-48" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb13-49"><a href="#cb13-49" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(</span>
+<span id="cb13-50"><a href="#cb13-50" aria-hidden="true" tabindex="-1"></a>    <span class="at">plot.title =</span> <span class="fu">element_text</span>(<span class="at">size =</span> <span class="dv">16</span>, <span class="at">face =</span> <span class="st">"bold"</span>, <span class="at">hjust =</span> <span class="fl">0.5</span>)</span>
+<span id="cb13-51"><a href="#cb13-51" aria-hidden="true" tabindex="-1"></a>  )</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="p1_files/figure-html/tanya_fifth_graph-1.png" class="img-fluid figure-img" width="1152"></p>
+</figure>
+</div>
+</div>
+</div>
+<p><strong>Interpretation</strong>: we do have a clear demografic profile.</p>
+<ol type="1">
+<li><strong>By gender</strong>: arrests are dominated by male species crossing 90% mark and achieving an astonishing 91.5% - 96.2%(for weopons used/financial categories).</li>
+<li><strong>By age</strong>: more then half of the arrested people are aged 25-44 with following groups of 45-64 and 18-24. Concluding from this we might say that an age has some strong correlation. The fitter you are the higher the chance of having a wrong thoght and braking a law.</li>
+<li><strong>By race</strong>: data shows 47.9% of arrests are connected to black and 25.4 to black hispanic. This may be influenced by their worse starting point(not having a roof over their head, worrying about what to eat the next day). But nothingcan justify unhealthy decisions. There fore it might be a good idea to be extra cousines dealing with those groups of people not to loose personal items.</li>
+</ol>
+</section>
+<section id="the-where-a-geospatial-analysis" class="level3">
+<h3 class="anchored" data-anchor-id="the-where-a-geospatial-analysis">The “Where” — A Geospatial Analysis</h3>
+<p>We agregated the data by location and category, then filtered for the 100 locations, which have the most arrests. This shows the spots where city potentially has problems either with security or does have very high amounts of important/pricy stuff. Therefore, you should be attentive espesially in them if you go for a walk to reset your mind.</p>
+<div class="cell">
+<details class="code-fold">
+<summary>Show code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>arrests <span class="ot">&lt;-</span> arrests <span class="sc">|&gt;</span> </span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>( <span class="at">category =</span> <span class="fu">crime_category</span>(pd_desc)) <span class="co"># for the visualiations that follow</span></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>arrests_loc_top_100 <span class="ot">&lt;-</span> arrests <span class="sc">|&gt;</span> </span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(latitude, longitude, category) <span class="sc">|&gt;</span> </span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">drop_na</span>(latitude, longitude) <span class="sc">|&gt;</span> </span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(latitude <span class="sc">!=</span> <span class="dv">0</span>, longitude <span class="sc">!=</span> <span class="dv">0</span>,</span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a>         category <span class="sc">!=</span> <span class="st">"Other"</span>) <span class="sc">|&gt;</span> </span>
+<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">st_as_sf</span>(<span class="at">coords =</span> <span class="fu">c</span>(<span class="st">"longitude"</span>, <span class="st">"latitude"</span>), <span class="at">crs =</span> <span class="dv">4326</span>) <span class="sc">|&gt;</span> </span>
+<span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a>  <span class="co"># st_transform(st_crs(nyc_boroughs)) |&gt; </span></span>
+<span id="cb14-11"><a href="#cb14-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(</span>
+<span id="cb14-12"><a href="#cb14-12" aria-hidden="true" tabindex="-1"></a>    <span class="at">.by =</span> <span class="fu">c</span>(geometry, category),</span>
+<span id="cb14-13"><a href="#cb14-13" aria-hidden="true" tabindex="-1"></a>    <span class="at">n =</span> <span class="fu">n</span>()</span>
+<span id="cb14-14"><a href="#cb14-14" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">|&gt;</span> </span>
+<span id="cb14-15"><a href="#cb14-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">slice_max</span>(n, <span class="at">n =</span> <span class="dv">100</span>)</span>
+<span id="cb14-16"><a href="#cb14-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-17"><a href="#cb14-17" aria-hidden="true" tabindex="-1"></a>custom_colors <span class="ot">&lt;-</span> <span class="fu">c</span>(</span>
+<span id="cb14-18"><a href="#cb14-18" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Violent Crime"</span> <span class="ot">=</span> <span class="st">"#ff0000"</span>,   </span>
+<span id="cb14-19"><a href="#cb14-19" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Property Crime"</span> <span class="ot">=</span> <span class="st">"#ffe100"</span>,  </span>
+<span id="cb14-20"><a href="#cb14-20" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Public Order/Admin"</span> <span class="ot">=</span> <span class="st">"#000000"</span>         </span>
+<span id="cb14-21"><a href="#cb14-21" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb14-22"><a href="#cb14-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-23"><a href="#cb14-23" aria-hidden="true" tabindex="-1"></a><span class="fu">suppressMessages</span>({ <span class="co"># sf was giving a warning message about it's accuracy</span></span>
+<span id="cb14-24"><a href="#cb14-24" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>() <span class="sc">+</span></span>
+<span id="cb14-25"><a href="#cb14-25" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_sf</span>(<span class="at">data =</span> nyc_boroughs_transformed, <span class="at">fill =</span> <span class="st">"#f0f5f9"</span>, <span class="at">color =</span> <span class="st">"grey16"</span>, <span class="at">linewidth =</span> <span class="fl">0.5</span>) <span class="sc">+</span></span>
+<span id="cb14-26"><a href="#cb14-26" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_sf</span>(<span class="at">data =</span> nyc_streets_clipped, <span class="at">color =</span> <span class="st">"#b0bac0"</span>, <span class="at">linewidth =</span> <span class="fl">0.25</span>) <span class="sc">+</span></span>
+<span id="cb14-27"><a href="#cb14-27" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_sf_text</span>(</span>
+<span id="cb14-28"><a href="#cb14-28" aria-hidden="true" tabindex="-1"></a>    <span class="at">data =</span> nyc_boroughs_transformed,</span>
+<span id="cb14-29"><a href="#cb14-29" aria-hidden="true" tabindex="-1"></a>    <span class="fu">aes</span>(<span class="at">label =</span> borough_name),</span>
+<span id="cb14-30"><a href="#cb14-30" aria-hidden="true" tabindex="-1"></a>    <span class="at">color =</span> <span class="st">"#4a5568"</span>,</span>
+<span id="cb14-31"><a href="#cb14-31" aria-hidden="true" tabindex="-1"></a>    <span class="at">fontface =</span> <span class="st">"bold"</span>,</span>
+<span id="cb14-32"><a href="#cb14-32" aria-hidden="true" tabindex="-1"></a>    <span class="at">size =</span> <span class="fl">3.5</span>,</span>
+<span id="cb14-33"><a href="#cb14-33" aria-hidden="true" tabindex="-1"></a>    <span class="at">check_overlap =</span> <span class="cn">TRUE</span></span>
+<span id="cb14-34"><a href="#cb14-34" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb14-35"><a href="#cb14-35" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_sf</span>(</span>
+<span id="cb14-36"><a href="#cb14-36" aria-hidden="true" tabindex="-1"></a>    <span class="at">data =</span> arrests_loc_top_100,</span>
+<span id="cb14-37"><a href="#cb14-37" aria-hidden="true" tabindex="-1"></a>    <span class="fu">aes</span>(<span class="at">color =</span> category,</span>
+<span id="cb14-38"><a href="#cb14-38" aria-hidden="true" tabindex="-1"></a>        <span class="at">size =</span> n), </span>
+<span id="cb14-39"><a href="#cb14-39" aria-hidden="true" tabindex="-1"></a>    <span class="at">alpha =</span> <span class="fl">0.7</span> </span>
+<span id="cb14-40"><a href="#cb14-40" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb14-41"><a href="#cb14-41" aria-hidden="true" tabindex="-1"></a>  <span class="fu">coord_sf</span>(</span>
+<span id="cb14-42"><a href="#cb14-42" aria-hidden="true" tabindex="-1"></a>    <span class="at">xlim =</span> <span class="fu">c</span>(<span class="sc">-</span><span class="fl">74.25</span>, <span class="sc">-</span><span class="fl">73.7</span>), </span>
+<span id="cb14-43"><a href="#cb14-43" aria-hidden="true" tabindex="-1"></a>    <span class="at">ylim =</span> <span class="fu">c</span>(<span class="fl">40.5</span>, <span class="fl">40.92</span>),</span>
+<span id="cb14-44"><a href="#cb14-44" aria-hidden="true" tabindex="-1"></a>    <span class="at">expand =</span> <span class="cn">FALSE</span></span>
+<span id="cb14-45"><a href="#cb14-45" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb14-46"><a href="#cb14-46" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_color_manual</span>(<span class="at">values =</span> custom_colors) <span class="sc">+</span></span>
+<span id="cb14-47"><a href="#cb14-47" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_size_continuous</span>(</span>
+<span id="cb14-48"><a href="#cb14-48" aria-hidden="true" tabindex="-1"></a>    <span class="at">name =</span> <span class="st">"Number of Arrests"</span>, </span>
+<span id="cb14-49"><a href="#cb14-49" aria-hidden="true" tabindex="-1"></a>    <span class="at">range =</span> <span class="fu">c</span>(<span class="dv">2</span>, <span class="dv">8</span>)</span>
+<span id="cb14-50"><a href="#cb14-50" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb14-51"><a href="#cb14-51" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(</span>
+<span id="cb14-52"><a href="#cb14-52" aria-hidden="true" tabindex="-1"></a>    <span class="at">title =</span> <span class="st">"Top 100 Arrest Locations in New York City"</span>,</span>
+<span id="cb14-53"><a href="#cb14-53" aria-hidden="true" tabindex="-1"></a>    <span class="at">subtitle =</span> <span class="st">"Points sized by arrest frequency and colored by crime category"</span>,</span>
+<span id="cb14-54"><a href="#cb14-54" aria-hidden="true" tabindex="-1"></a>    <span class="at">caption =</span> <span class="st">"Data Source: NYC OpenData | Street map © OpenStreetMap contributors"</span>,</span>
+<span id="cb14-55"><a href="#cb14-55" aria-hidden="true" tabindex="-1"></a>    <span class="at">color =</span> <span class="st">"Crime Category"</span> </span>
+<span id="cb14-56"><a href="#cb14-56" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb14-57"><a href="#cb14-57" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_void</span>(<span class="at">base_size =</span> <span class="dv">14</span>) <span class="sc">+</span></span>
+<span id="cb14-58"><a href="#cb14-58" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(</span>
+<span id="cb14-59"><a href="#cb14-59" aria-hidden="true" tabindex="-1"></a>    <span class="at">plot.background =</span> <span class="fu">element_rect</span>(<span class="at">fill =</span> <span class="st">"#f0f5f9"</span>, <span class="at">color =</span> <span class="cn">NA</span>),</span>
+<span id="cb14-60"><a href="#cb14-60" aria-hidden="true" tabindex="-1"></a>    <span class="at">panel.background =</span> <span class="fu">element_rect</span>(<span class="at">fill =</span> <span class="st">"#f0f5f9"</span>, <span class="at">color =</span> <span class="cn">NA</span>),</span>
+<span id="cb14-61"><a href="#cb14-61" aria-hidden="true" tabindex="-1"></a>    <span class="at">legend.position =</span> <span class="st">"right"</span>,</span>
+<span id="cb14-62"><a href="#cb14-62" aria-hidden="true" tabindex="-1"></a>    <span class="at">legend.background =</span> <span class="fu">element_rect</span>(<span class="at">fill =</span> <span class="st">"transparent"</span>),</span>
+<span id="cb14-63"><a href="#cb14-63" aria-hidden="true" tabindex="-1"></a>    <span class="at">plot.title =</span> <span class="fu">element_text</span>(<span class="at">face =</span> <span class="st">"bold"</span>, <span class="at">size =</span> <span class="dv">20</span>, <span class="at">hjust =</span> <span class="fl">0.5</span>, <span class="at">color =</span> <span class="st">"#2a3439"</span>),</span>
+<span id="cb14-64"><a href="#cb14-64" aria-hidden="true" tabindex="-1"></a>    <span class="at">plot.subtitle =</span> <span class="fu">element_text</span>(<span class="at">size =</span> <span class="dv">14</span>, <span class="at">hjust =</span> <span class="fl">0.5</span>, <span class="at">color =</span> <span class="st">"#5b6469"</span>, <span class="at">margin =</span> <span class="fu">margin</span>(<span class="at">b =</span> <span class="dv">15</span>)),</span>
+<span id="cb14-65"><a href="#cb14-65" aria-hidden="true" tabindex="-1"></a>    <span class="at">plot.caption =</span> <span class="fu">element_text</span>(<span class="at">size =</span> <span class="dv">9</span>, <span class="at">hjust =</span> <span class="dv">1</span>, <span class="at">color =</span> <span class="st">"gray50"</span>),</span>
+<span id="cb14-66"><a href="#cb14-66" aria-hidden="true" tabindex="-1"></a>    <span class="at">plot.margin =</span> <span class="fu">margin</span>(<span class="dv">10</span>, <span class="dv">10</span>, <span class="dv">10</span>, <span class="dv">10</span>)</span>
+<span id="cb14-67"><a href="#cb14-67" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb14-68"><a href="#cb14-68" aria-hidden="true" tabindex="-1"></a>})</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="p1_files/figure-html/alona_first_graph-1.png" class="img-fluid figure-img" width="1152"></p>
+</figure>
+</div>
+</div>
+</div>
+<p><strong>Interpretation</strong>: Hotspots are Clustered in Manhattan, Bronx and Brooklyn</p>
+<ul>
+<li>Top 100 arrest locations are not random - instead they are highly concentrated.</li>
+<li>We shouldn’t say that this areas are more dengerous(at least from this analysis) as the next fact is persistent: the more populated your area is - the more arrests you are gonna have.</li>
+</ul>
+<div class="cell">
+<details class="code-fold">
+<summary>Show code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Data for the second graph of weapon VS Shooting</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>arrest_weapon <span class="ot">&lt;-</span> arrests <span class="sc">|&gt;</span> </span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(category <span class="sc">==</span> <span class="st">"Weapons/Explosives"</span>) <span class="sc">|&gt;</span> </span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(new_georeferenced_column) <span class="sc">|&gt;</span></span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">st_as_sf</span>(<span class="at">wkt =</span> <span class="st">"new_georeferenced_column"</span>, <span class="at">crs =</span> <span class="dv">4326</span>) <span class="sc">|&gt;</span></span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">st_transform</span>(<span class="fu">st_crs</span>(nyc_boroughs_transformed)) <span class="sc">|&gt;</span> </span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(</span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a>    <span class="at">.by =</span> new_georeferenced_column,</span>
+<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a>    <span class="at">n =</span> <span class="fu">n</span>()</span>
+<span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a>    ) <span class="sc">|&gt;</span> </span>
+<span id="cb15-11"><a href="#cb15-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">slice_max</span>(n , <span class="at">n =</span><span class="dv">100</span>)</span>
+<span id="cb15-12"><a href="#cb15-12" aria-hidden="true" tabindex="-1"></a> </span>
+<span id="cb15-13"><a href="#cb15-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-14"><a href="#cb15-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-15"><a href="#cb15-15" aria-hidden="true" tabindex="-1"></a>shooting_weapon <span class="ot">&lt;-</span> shooting <span class="sc">|&gt;</span> </span>
+<span id="cb15-16"><a href="#cb15-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(new_georeferenced_column) <span class="sc">|&gt;</span></span>
+<span id="cb15-17"><a href="#cb15-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">st_as_sf</span>(<span class="at">wkt =</span> <span class="st">"new_georeferenced_column"</span>, <span class="at">crs =</span> <span class="dv">4326</span>) <span class="sc">|&gt;</span></span>
+<span id="cb15-18"><a href="#cb15-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">st_transform</span>(<span class="fu">st_crs</span>(nyc_boroughs_transformed)) <span class="sc">|&gt;</span> </span>
+<span id="cb15-19"><a href="#cb15-19" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(</span>
+<span id="cb15-20"><a href="#cb15-20" aria-hidden="true" tabindex="-1"></a>    <span class="at">.by =</span> new_georeferenced_column,</span>
+<span id="cb15-21"><a href="#cb15-21" aria-hidden="true" tabindex="-1"></a>    <span class="at">n =</span> <span class="fu">n</span>()</span>
+<span id="cb15-22"><a href="#cb15-22" aria-hidden="true" tabindex="-1"></a>  )  <span class="sc">|&gt;</span> </span>
+<span id="cb15-23"><a href="#cb15-23" aria-hidden="true" tabindex="-1"></a>  <span class="fu">slice_max</span>(n , <span class="at">n =</span><span class="dv">100</span>)</span>
+<span id="cb15-24"><a href="#cb15-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-25"><a href="#cb15-25" aria-hidden="true" tabindex="-1"></a><span class="co"># --------------------------------</span></span>
+<span id="cb15-26"><a href="#cb15-26" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-27"><a href="#cb15-27" aria-hidden="true" tabindex="-1"></a><span class="co"># Second plot </span></span>
+<span id="cb15-28"><a href="#cb15-28" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-29"><a href="#cb15-29" aria-hidden="true" tabindex="-1"></a><span class="fu">suppressMessages</span>({ <span class="co"># sf was giving a warning message about it's accuracy</span></span>
+<span id="cb15-30"><a href="#cb15-30" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>() <span class="sc">+</span></span>
+<span id="cb15-31"><a href="#cb15-31" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_sf</span>(<span class="at">data =</span> nyc_boroughs_transformed, <span class="at">fill =</span> <span class="st">"#f0f5f9"</span>, <span class="at">color =</span> <span class="st">"grey16"</span>, <span class="at">linewidth =</span> <span class="fl">0.5</span>) <span class="sc">+</span></span>
+<span id="cb15-32"><a href="#cb15-32" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_sf</span>(<span class="at">data =</span> nyc_streets_clipped, <span class="at">color =</span> <span class="st">"#b0bac0"</span>, <span class="at">linewidth =</span> <span class="fl">0.25</span>) <span class="sc">+</span></span>
+<span id="cb15-33"><a href="#cb15-33" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_sf</span>(</span>
+<span id="cb15-34"><a href="#cb15-34" aria-hidden="true" tabindex="-1"></a>    <span class="at">data =</span> arrest_weapon,</span>
+<span id="cb15-35"><a href="#cb15-35" aria-hidden="true" tabindex="-1"></a>    <span class="fu">aes</span>(<span class="at">color =</span> <span class="st">"Weapon Arrests"</span>, </span>
+<span id="cb15-36"><a href="#cb15-36" aria-hidden="true" tabindex="-1"></a>        <span class="at">size =</span> n</span>
+<span id="cb15-37"><a href="#cb15-37" aria-hidden="true" tabindex="-1"></a>        ),</span>
+<span id="cb15-38"><a href="#cb15-38" aria-hidden="true" tabindex="-1"></a>    <span class="at">alpha =</span> <span class="fl">0.7</span></span>
+<span id="cb15-39"><a href="#cb15-39" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb15-40"><a href="#cb15-40" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_sf</span>(</span>
+<span id="cb15-41"><a href="#cb15-41" aria-hidden="true" tabindex="-1"></a>    <span class="at">data =</span> shooting_weapon,</span>
+<span id="cb15-42"><a href="#cb15-42" aria-hidden="true" tabindex="-1"></a>    <span class="fu">aes</span>(<span class="at">color =</span> <span class="st">"Shooting Incidents"</span>, </span>
+<span id="cb15-43"><a href="#cb15-43" aria-hidden="true" tabindex="-1"></a>        <span class="at">size =</span> n</span>
+<span id="cb15-44"><a href="#cb15-44" aria-hidden="true" tabindex="-1"></a>        ), </span>
+<span id="cb15-45"><a href="#cb15-45" aria-hidden="true" tabindex="-1"></a>    <span class="at">alpha =</span> <span class="fl">0.7</span></span>
+<span id="cb15-46"><a href="#cb15-46" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb15-47"><a href="#cb15-47" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_sf_text</span>(</span>
+<span id="cb15-48"><a href="#cb15-48" aria-hidden="true" tabindex="-1"></a>    <span class="at">data =</span> nyc_boroughs_transformed,</span>
+<span id="cb15-49"><a href="#cb15-49" aria-hidden="true" tabindex="-1"></a>    <span class="fu">aes</span>(<span class="at">label =</span> borough_name),</span>
+<span id="cb15-50"><a href="#cb15-50" aria-hidden="true" tabindex="-1"></a>    <span class="at">color =</span> <span class="st">"#4a5568"</span>,</span>
+<span id="cb15-51"><a href="#cb15-51" aria-hidden="true" tabindex="-1"></a>    <span class="at">fontface =</span> <span class="st">"bold"</span>,</span>
+<span id="cb15-52"><a href="#cb15-52" aria-hidden="true" tabindex="-1"></a>    <span class="at">size =</span> <span class="fl">3.5</span>,</span>
+<span id="cb15-53"><a href="#cb15-53" aria-hidden="true" tabindex="-1"></a>    <span class="at">check_overlap =</span> <span class="cn">TRUE</span></span>
+<span id="cb15-54"><a href="#cb15-54" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb15-55"><a href="#cb15-55" aria-hidden="true" tabindex="-1"></a>  <span class="fu">coord_sf</span>(<span class="at">xlim =</span> <span class="fu">c</span>(<span class="sc">-</span><span class="fl">74.25</span>, <span class="sc">-</span><span class="fl">73.7</span>), <span class="at">ylim =</span> <span class="fu">c</span>(<span class="fl">40.5</span>, <span class="fl">40.92</span>), <span class="at">expand =</span> <span class="cn">FALSE</span>) <span class="sc">+</span></span>
+<span id="cb15-56"><a href="#cb15-56" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_color_manual</span>(</span>
+<span id="cb15-57"><a href="#cb15-57" aria-hidden="true" tabindex="-1"></a>    <span class="at">name =</span> <span class="st">"Incident Type"</span>, </span>
+<span id="cb15-58"><a href="#cb15-58" aria-hidden="true" tabindex="-1"></a>    <span class="at">values =</span> <span class="fu">c</span>(</span>
+<span id="cb15-59"><a href="#cb15-59" aria-hidden="true" tabindex="-1"></a>      <span class="st">"Weapon Arrests"</span> <span class="ot">=</span> <span class="st">"blue"</span>, </span>
+<span id="cb15-60"><a href="#cb15-60" aria-hidden="true" tabindex="-1"></a>      <span class="st">"Shooting Incidents"</span> <span class="ot">=</span> <span class="st">"red"</span> <span class="co">#</span></span>
+<span id="cb15-61"><a href="#cb15-61" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb15-62"><a href="#cb15-62" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb15-63"><a href="#cb15-63" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_size_continuous</span>(</span>
+<span id="cb15-64"><a href="#cb15-64" aria-hidden="true" tabindex="-1"></a>    <span class="at">name =</span> <span class="st">"Number of Incidents"</span>, </span>
+<span id="cb15-65"><a href="#cb15-65" aria-hidden="true" tabindex="-1"></a>    <span class="at">range =</span> <span class="fu">c</span>(<span class="dv">2</span>, <span class="dv">8</span>)</span>
+<span id="cb15-66"><a href="#cb15-66" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb15-67"><a href="#cb15-67" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(</span>
+<span id="cb15-68"><a href="#cb15-68" aria-hidden="true" tabindex="-1"></a>    <span class="at">title =</span> <span class="st">"Weapon Arrests and Shooting Incidents in NYC"</span>,</span>
+<span id="cb15-69"><a href="#cb15-69" aria-hidden="true" tabindex="-1"></a>    <span class="at">subtitle =</span> <span class="st">"Comparing locations of weapon-related arrests and shooting incidents, sized by frequency."</span>,</span>
+<span id="cb15-70"><a href="#cb15-70" aria-hidden="true" tabindex="-1"></a>    <span class="at">caption =</span> <span class="st">"Data Source: NYC OpenData | Street map © OpenStreetMap contributors"</span></span>
+<span id="cb15-71"><a href="#cb15-71" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb15-72"><a href="#cb15-72" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_void</span>(<span class="at">base_size =</span> <span class="dv">14</span>) <span class="sc">+</span></span>
+<span id="cb15-73"><a href="#cb15-73" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(</span>
+<span id="cb15-74"><a href="#cb15-74" aria-hidden="true" tabindex="-1"></a>    <span class="at">plot.background =</span> <span class="fu">element_rect</span>(<span class="at">fill =</span> <span class="st">"#f0f5f9"</span>, <span class="at">color =</span> <span class="cn">NA</span>),</span>
+<span id="cb15-75"><a href="#cb15-75" aria-hidden="true" tabindex="-1"></a>    <span class="at">panel.background =</span> <span class="fu">element_rect</span>(<span class="at">fill =</span> <span class="st">"#f0f5f9"</span>, <span class="at">color =</span> <span class="cn">NA</span>),</span>
+<span id="cb15-76"><a href="#cb15-76" aria-hidden="true" tabindex="-1"></a>    <span class="at">legend.position =</span> <span class="st">"right"</span>,</span>
+<span id="cb15-77"><a href="#cb15-77" aria-hidden="true" tabindex="-1"></a>    <span class="at">legend.background =</span> <span class="fu">element_rect</span>(<span class="at">fill =</span> <span class="st">"transparent"</span>),</span>
+<span id="cb15-78"><a href="#cb15-78" aria-hidden="true" tabindex="-1"></a>    <span class="at">pplot.title =</span> <span class="fu">element_text</span>(<span class="at">face =</span> <span class="st">"bold"</span>, <span class="at">size =</span> <span class="dv">20</span>, <span class="at">hjust =</span> <span class="fl">0.5</span>, <span class="at">color =</span> <span class="st">"#2a3439"</span>),</span>
+<span id="cb15-79"><a href="#cb15-79" aria-hidden="true" tabindex="-1"></a>    <span class="at">plot.subtitle =</span> <span class="fu">element_text</span>(<span class="at">size =</span> <span class="dv">14</span>, <span class="at">hjust =</span> <span class="fl">0.5</span>, <span class="at">color =</span> <span class="st">"#5b6469"</span>, <span class="at">margin =</span> <span class="fu">margin</span>(<span class="at">b =</span> <span class="dv">15</span>)),</span>
+<span id="cb15-80"><a href="#cb15-80" aria-hidden="true" tabindex="-1"></a>    <span class="at">plot.caption =</span> <span class="fu">element_text</span>(<span class="at">size =</span> <span class="dv">9</span>, <span class="at">hjust =</span> <span class="dv">1</span>, <span class="at">color =</span> <span class="st">"gray50"</span>),</span>
+<span id="cb15-81"><a href="#cb15-81" aria-hidden="true" tabindex="-1"></a>    <span class="at">plot.margin =</span> <span class="fu">margin</span>(<span class="dv">10</span>, <span class="dv">10</span>, <span class="dv">10</span>, <span class="dv">10</span>)</span>
+<span id="cb15-82"><a href="#cb15-82" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb15-83"><a href="#cb15-83" aria-hidden="true" tabindex="-1"></a>})</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="p1_files/figure-html/alona_second_graph-1.png" class="img-fluid figure-img" width="1152"></p>
+</figure>
+</div>
+</div>
+</div>
+<p><strong>Interpretation</strong>: Arrests and shootings typically overlap, but <strong>not everywere</strong>.</p>
+<ul>
+<li>In general we see an incredibly good correlation between the shooting locations and arrests which means that NYC police completes their job very good.</li>
+<li>However we see an unproportianally big number of blue circles(arrests) with small number of red circles(shooting places) in the Queens. This might be an indicator that offenders are trying to hide there in a “<strong>quit place</strong>” so it is <strong>might be a good idea</strong> not to decrease but actually <strong>to increase the number of police</strong> there on duty to protect the civilians.</li>
+</ul>
+</section>
+</section>
+
+</main>
+<!-- /main column -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>
